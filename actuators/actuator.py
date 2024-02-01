@@ -1,5 +1,4 @@
-from typing import Optional
-
+from typing import Optional, Any
 import RPi.GPIO as GPIO
 import logging
 import threading
@@ -19,7 +18,7 @@ class BaseActuator:
         _stop_thread (bool): Flag to signal the active thread to stop its operation.
     """
 
-    def __init__(self, relay_pin: int, initial_state: Optional[bool] = None):
+    def __init__(self, relay_pin: int, initial_state: Optional[bool] = None) -> None:
         """
         Initializes the actuator with the specified GPIO pin and an optional initial state.
 
@@ -39,10 +38,10 @@ class BaseActuator:
         if initial_state is not None:
             try:
                 self._update_state(initial_state, initial=True)
-            except Exception as e:
-                logging.error(f"Error setting initial state of actuator on pin {self.relay_pin}: {e}")
+            except Exception as ex:
+                logging.error(f"Error setting initial state of actuator on pin {self.relay_pin}: {ex}")
 
-    def _update_state(self, new_state: bool, initial: bool = False):
+    def _update_state(self, new_state: bool, initial: bool = False) -> None:
         """
         Updates the state of the actuator.
 
@@ -56,10 +55,10 @@ class BaseActuator:
             self.state = new_state
             self.last_state_change = datetime.datetime.now()
             logging.info(f"State of actuator {self.relay_pin} changed to {self.state}.")
-        except Exception as e:
-            logging.error(f"Error updating state of actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Error updating state of actuator on pin {self.relay_pin}: {ex}")
 
-    def activate(self):
+    def activate(self) -> None:
         """
         Activates the actuator by setting the GPIO pin high.
 
@@ -70,11 +69,11 @@ class BaseActuator:
             GPIO.output(self.relay_pin, GPIO.HIGH)
             self._update_state(True)
             logging.info(f"Actuator {self.relay_pin} has been activated.")
-        except Exception as e:
-            logging.error(f"Failed to activate actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Failed to activate actuator on pin {self.relay_pin}: {ex}")
             raise
 
-    def deactivate(self):
+    def deactivate(self) -> None:
         """
         Deactivates the actuator by setting the GPIO pin low.
 
@@ -85,11 +84,11 @@ class BaseActuator:
             GPIO.output(self.relay_pin, GPIO.LOW)
             self._update_state(False)
             logging.info(f"Actuator {self.relay_pin} has been deactivated.")
-        except Exception as e:
-            logging.error(f"Failed to deactivate actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Failed to deactivate actuator on pin {self.relay_pin}: {ex}")
             raise
 
-    def toggle(self):
+    def toggle(self) -> None:
         """
         Toggles the state of the actuator between active and inactive.
         """
@@ -99,11 +98,11 @@ class BaseActuator:
             else:
                 self.activate()
             logging.info(f"Actuator {self.relay_pin} state toggled.")
-        except Exception as e:
-            logging.error(f"Error toggling actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Error toggling actuator on pin {self.relay_pin}: {ex}")
             raise
 
-    def change_state_for(self, new_state: Optional[bool] = None, duration: Optional[int] = None):
+    def change_state_for(self, new_state: Optional[bool] = None, duration: Optional[int] = None) -> None:
         """
         Changes the state of the actuator for a specified duration using a separate thread.
 
@@ -122,10 +121,10 @@ class BaseActuator:
             self.active_thread = threading.Thread(target=self._change_state_with_timer, args=(resolved_new_state, duration))
             self.active_thread.start()
             logging.info(f"Started a thread to change state of actuator {self.relay_pin} for {duration} seconds.")
-        except Exception as e:
-            logging.error(f"Failed to start thread for changing state of actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Failed to start thread for changing state of actuator on pin {self.relay_pin}: {ex}")
 
-    def _change_state_with_timer(self, new_state: bool, duration: int):
+    def _change_state_with_timer(self, new_state: bool, duration: int) -> None:
         """
         A private method to change the state of the actuator for a specified duration.
 
@@ -144,11 +143,11 @@ class BaseActuator:
                 time.sleep(0.1)
             self._update_state(not initial_state)
             logging.info(f"State of actuator {self.relay_pin} reverted after {duration} seconds.")
-        except Exception as e:
-            logging.error(f"Error in maintaining state for actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Error in maintaining state for actuator on pin {self.relay_pin}: {ex}")
             raise
 
-    def schedule_state_change(self, new_state: Optional[bool] = None, start_time: Optional[datetime.time] = None, end_time: Optional[datetime.time] = None):
+    def schedule_state_change(self, new_state: Optional[bool] = None, start_time: Optional[datetime.time] = None, end_time: Optional[datetime.time] = None) -> None:
         """
         Schedules a state change for the actuator within a specified time interval.
 
@@ -168,10 +167,10 @@ class BaseActuator:
             self.active_thread = threading.Thread(target=self._scheduled_state_change, args=(resolved_new_state, start_time, end_time))
             self.active_thread.start()
             logging.info(f"Scheduled state change for actuator {self.relay_pin}.")
-        except Exception as e:
-            logging.error(f"Failed to schedule state change for actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Failed to schedule state change for actuator on pin {self.relay_pin}: {ex}")
 
-    def _scheduled_state_change(self, new_state: bool, start_time: Optional[datetime.time], end_time: Optional[datetime.time]):
+    def _scheduled_state_change(self, new_state: bool, start_time: Optional[datetime.time], end_time: Optional[datetime.time]) -> None:
         """
         A private method that handles the scheduled state change.
 
@@ -203,10 +202,10 @@ class BaseActuator:
 
             self._update_state(not new_state)
             logging.info(f"Scheduled state change for actuator {self.relay_pin} completed.")
-        except Exception as e:
-            logging.error(f"Error during scheduled state change for actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Error during scheduled state change for actuator on pin {self.relay_pin}: {ex}")
 
-    def activate_for(self, duration: int):
+    def activate_for(self, duration: int) -> None:
         """
         Activates the actuator for a specified duration.
 
@@ -218,7 +217,7 @@ class BaseActuator:
         """
         self.change_state_for(True, duration)
 
-    def deactivate_for(self, duration: int):
+    def deactivate_for(self, duration: int) -> None:
         """
         Deactivates the actuator for a specified duration.
 
@@ -230,7 +229,7 @@ class BaseActuator:
         """
         self.change_state_for(False, duration)
 
-    def schedule_activation(self, start_time: datetime.time, end_time: datetime.time):
+    def schedule_activation(self, start_time: datetime.time, end_time: datetime.time) -> None:
         """
         Schedules the activation of the actuator between specified start and end times.
 
@@ -243,7 +242,7 @@ class BaseActuator:
         """
         self.schedule_state_change(True, start_time, end_time)
 
-    def schedule_deactivation(self, start_time: datetime.time, end_time: datetime.time):
+    def schedule_deactivation(self, start_time: datetime.time, end_time: datetime.time) -> None:
         """
         Schedules the deactivation of the actuator between specified start and end times.
 
@@ -269,8 +268,8 @@ class BaseActuator:
                 self.active_thread.join()
                 self._stop_thread = False
                 logging.info(f"Activation of actuator {self.relay_pin} has been cancelled.")
-        except Exception as e:
-            logging.error(f"Failed to cancel activation of actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Failed to cancel activation of actuator on pin {self.relay_pin}: {ex}")
             raise
 
     def is_thread_active(self) -> bool:
@@ -317,6 +316,6 @@ class BaseActuator:
             self.cancel_activation()
             GPIO.cleanup(self.relay_pin)
             logging.info(f"Actuator {self.relay_pin} has been cleaned up.")
-        except Exception as e:
-            logging.error(f"Error during cleanup of actuator on pin {self.relay_pin}: {e}")
+        except Exception as ex:
+            logging.error(f"Error during cleanup of actuator on pin {self.relay_pin}: {ex}")
             raise
