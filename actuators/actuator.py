@@ -18,15 +18,15 @@ class BaseActuator:
         _stop_thread (bool): Flag to signal the active thread to stop its operation.
     """
 
-    def __init__(self, relay_pin: int, initial_state: Optional[bool] = None) -> None:
+    def __init__(self, gpio_pin: int, initial_state: Optional[bool] = None) -> None:
         """
         Initializes the actuator with the specified GPIO pin and an optional initial state.
 
         Args:
-            relay_pin (int): The GPIO pin to control the actuator.
+            gpio_pin (int): The GPIO pin to control the actuator.
             initial_state (Optional[bool]): The initial state to set the actuator to. If None, the state is not set.
         """
-        self.relay_pin = relay_pin
+        self.relay_pin = gpio_pin
         self.state = False
         self.last_state_change = None
         self.previous_state = None
@@ -38,6 +38,10 @@ class BaseActuator:
         if initial_state is not None:
             try:
                 self._update_state(initial_state, initial=True)
+                if initial_state:
+                    self.activate()
+                else:
+                    self.deactivate()
             except Exception as ex:
                 logging.error(f"Error setting initial state of actuator on pin {self.relay_pin}: {ex}")
 
@@ -60,13 +64,13 @@ class BaseActuator:
 
     def activate(self) -> None:
         """
-        Activates the actuator by setting the GPIO pin high.
+        Activates the actuator by setting the GPIO pin low.
 
         Raises:
             Exception: If there is an error in setting the GPIO pin.
         """
         try:
-            GPIO.output(self.relay_pin, GPIO.HIGH)
+            GPIO.output(self.relay_pin, GPIO.LOW)
             self._update_state(True)
             logging.info(f"Actuator {self.relay_pin} has been activated.")
         except Exception as ex:
@@ -75,13 +79,13 @@ class BaseActuator:
 
     def deactivate(self) -> None:
         """
-        Deactivates the actuator by setting the GPIO pin low.
+        Deactivates the actuator by setting the GPIO pin high.
 
         Raises:
             Exception: If there is an error in setting the GPIO pin.
         """
         try:
-            GPIO.output(self.relay_pin, GPIO.LOW)
+            GPIO.output(self.relay_pin, GPIO.HIGH)
             self._update_state(False)
             logging.info(f"Actuator {self.relay_pin} has been deactivated.")
         except Exception as ex:
