@@ -1,9 +1,7 @@
 import logging
 from typing import Optional, Any
 import RPi.GPIO as GPIO
-import threading
 import datetime
-import time
 
 class BaseActuator:
     """
@@ -131,6 +129,15 @@ class BaseActuator:
             Optional[bool]: The previous state of the actuator, or None if not set.
         """
         return self.previous_state
+
+    def get_gpio_pin(self) -> int:
+        """
+        Retrieves the GPIO pin number associated with the actuator.
+
+        Returns:
+            int: The GPIO pin number.
+        """
+        return self.gpio_pin
 
     def __del__(self) -> None:
         """
