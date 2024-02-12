@@ -35,8 +35,8 @@ class BaseSensor(ABC):
 
         try:
             self.configure_sensor()
-        except Exception as e:
-            self.logger.error(f"Error configuring sensor: {e}")
+        except Exception as ex:
+            self.logger.error(f"Error configuring sensor: {ex}")
             raise
 
         if start_immediately:
@@ -59,8 +59,8 @@ class BaseSensor(ABC):
                 self.read_thread = threading.Thread(target=self._read_sensor_loop, daemon=True)
                 self.read_thread.start()
                 self.logger.info("Sensor reading started.")
-            except Exception as e:
-                self.logger.error(f"Failed to start sensor reading: {e}")
+            except Exception as ex:
+                self.logger.error(f"Failed to start sensor reading: {ex}")
 
     def stop_reading(self) -> None:
         """
@@ -72,8 +72,8 @@ class BaseSensor(ABC):
                 self.read_thread.join()
                 self.read_thread = None
                 self.logger.info("Sensor reading stopped.")
-            except Exception as e:
-                self.logger.error(f"Error while stopping sensor reading: {e}")
+            except Exception as ex:
+                self.logger.error(f"Error while stopping sensor reading: {ex}")
 
     def _read_sensor_loop(self) -> None:
         """
@@ -92,8 +92,8 @@ class BaseSensor(ABC):
                     self.readings.append(new_record)
                 else:
                     self.logger.warning(f"Incorrect data for reading={reading}")
-            except Exception as e:
-                self.logger.error(f"Error during sensor reading: {e}")
+            except Exception as ex:
+                self.logger.error(f"Error during sensor reading: {ex}")
             finally:
                 time.sleep(self.read_frequency)
 
@@ -154,8 +154,8 @@ class BaseSensor(ABC):
         """
         try:
             return float(value)
-        except ValueError as e:
-            raise ValueError(f"Cannot convert value to float: {value}") from e
+        except ValueError as ex:
+            raise ValueError(f"Cannot convert value to float: {value}") from ex
 
     @staticmethod
     def to_int(value) -> int:
@@ -173,8 +173,8 @@ class BaseSensor(ABC):
         """
         try:
             return int(value)
-        except ValueError as e:
-            raise ValueError(f"Cannot convert value to int: {value}") from e
+        except ValueError as ex:
+            raise ValueError(f"Cannot convert value to int: {value}") from ex
 
     def is_in_range(self, value: float, min_value: float, max_value: float) -> bool:
         """
@@ -210,30 +210,33 @@ class BaseSensor(ABC):
         Returns:
             bool: True if the value is an anomaly, False otherwise.
         """
-        now = datetime.datetime.now()
-        relevant_readings = [reading['value'] for reading in self.readings
-                             if now - reading['datetime'] <= datetime.timedelta(seconds=max_age_seconds)]
+        try:
+            now = datetime.datetime.now()
+            relevant_readings = [reading['value'] for reading in self.readings
+                                 if now - reading['datetime'] <= datetime.timedelta(seconds=max_age_seconds)]
 
-        if len(relevant_readings) < required_history:
-            self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned False to complete the list.")
-            return False
+            if len(relevant_readings) < required_history:
+                self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned False to complete the list.")
+                return False
 
-        if len(relevant_readings) < max_history:
-            relevant_readings = relevant_readings[-max_history:]
+            if len(relevant_readings) < max_history:
+                relevant_readings = relevant_readings[-max_history:]
 
-        mean = np.mean(relevant_readings)
-        standard_deviation = np.std(relevant_readings)
+            mean = np.mean(relevant_readings)
+            standard_deviation = np.std(relevant_readings)
 
-        self.logger.info(f"relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
+            self.logger.info(f"relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
 
-        if standard_deviation == 0:
-            self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns False.")
-            return False
+            if standard_deviation == 0:
+                self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns False.")
+                return False
 
-        z_score = (new_value - mean) / standard_deviation
-        reply = abs(z_score) > acceptable_deviation
-        self.logger.info(f"z_score={z_score}, reply={reply}")
-        return reply
+            z_score = (new_value - mean) / standard_deviation
+            reply = abs(z_score) > acceptable_deviation
+            self.logger.info(f"z_score={z_score}, reply={reply}")
+            return reply
+        except Exception as ex:
+            self.logger.error(f"Error on anomaly detector: {ex}")
 
     def __del__(self):
         """

@@ -36,8 +36,8 @@ class HumiditySensor(BaseSensor):
         try:
             self.dht_sensor = DHT11Sensor(self.pin)
             self.logger.info(f"Humidity sensor on pin {self.pin} configured.")
-        except Exception as e:
-            self.logger.error(f"Failed to configure humidity sensor on pin {self.pin}: {e}")
+        except Exception as ex:
+            self.logger.error(f"Failed to configure humidity sensor on pin {self.pin}: {ex}")
 
     def read_sensor(self) -> float:
         """
@@ -49,7 +49,7 @@ class HumiditySensor(BaseSensor):
         """
         try:
             for _ in range(3):
-                sensor_data = self.dht_sensor.read()
+                sensor_data = self.dht_sensor.read_sensor_value()
                 if sensor_data is not None:
                     self.logger.info(f"Humidity read from pin {self.pin}: {sensor_data['humidity']}%")
                     humidity = self.to_float(sensor_data['humidity'])
@@ -81,6 +81,6 @@ class HumiditySensor(BaseSensor):
                     time.sleep(0.5)
             self.logger.warning(f"Cannot read humidity from pin {self.pin} - return NaN.")
             return float('nan')
-        except Exception as e:
-            self.logger.error(f"Error reading humidity sensor on pin {self.pin}: {e}")
+        except Exception as ex:
+            self.logger.error(f"Error reading humidity sensor on pin {self.pin}: {ex}")
             return float('nan')

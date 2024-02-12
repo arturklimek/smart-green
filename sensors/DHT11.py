@@ -52,7 +52,7 @@ class DHT11Sensor:
                 instance = super(DHT11Sensor, cls).__new__(cls)
                 instance.sensor_type = sensor_type
                 instance.pin = pin
-                instance.last_read = None  # Type hints są już zadeklarowane na poziomie klasy
+                instance.last_read = None
                 instance.logger = logging.getLogger('app_logger')
                 instance._initialize_gpio(pin)
                 cls._instances[pin] = instance
@@ -71,11 +71,11 @@ class DHT11Sensor:
             GPIO.setwarnings(False)
             GPIO.setup(pin, GPIO.IN)
             self.logger.info(f"GPIO pin {pin} has been set up for DHT sensor.")
-        except Exception as e:
-            self.logger.error(f"Failed to initialize GPIO pin {pin} for DHT sensor: {e}")
+        except Exception as ex:
+            self.logger.error(f"Failed to initialize GPIO pin {pin} for DHT sensor: {ex}")
             raise
 
-    def read(self) -> Optional[Dict[str, float]]:
+    def read_sensor_value(self) -> Optional[Dict[str, float]]:
         """
         Performs a read operation on the DHT sensor to get the current humidity and temperature values.
 
@@ -87,6 +87,6 @@ class DHT11Sensor:
             self.last_read = {'humidity': humidity, 'temperature': temperature}
             self.logger.info(f"DHT11 on PIN: {self.pin} read {self.last_read}")
             return self.last_read
-        except Exception as e:
-            self.logger.error(f"Error reading DHT sensor on pin {self.pin}: {e}")
+        except Exception as ex:
+            self.logger.error(f"Error reading DHT sensor on pin {self.pin}: {ex}")
             return None

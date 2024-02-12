@@ -54,9 +54,9 @@ class BH1750Sensor:
         """
         self.i2c = busio.I2C(board.SCL, board.SDA)
         self.sensor = BH1750(self.i2c, address=i2c_address)
-        self.logger.info(f"BH1750 light sensor on I2C address {i2c_address} configured.")
+        self.logger.info(f"BH1750FVI light sensor on I2C address {i2c_address} configured.")
 
-    def read(self) -> Optional[float]:
+    def read_sensor_value(self) -> Optional[float]:
         """
         Performs a read operation on the BH1750 sensor to get the current light intensity value.
 
@@ -65,9 +65,9 @@ class BH1750Sensor:
         """
         try:
             light_intensity = self.sensor.lux
-            self.read = light_intensity
-            self.logger.info(f"BH1750 on I2C address {self.i2c_address} read {self.read} lux")
-            return self.read
-        except Exception as e:
-            self.logger.error(f"Error reading BH1750 sensor on I2C address {self.i2c_address}: {e}")
+            self.read_value = light_intensity
+            self.logger.info(f"BH1750 on I2C address {self.i2c_address} read {self.read_value} lux")
+            return self.read_value
+        except Exception as ex:
+            self.logger.error(f"Error reading BH1750 sensor on I2C address {self.i2c_address}: {ex}")
             return None
