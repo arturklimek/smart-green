@@ -1,6 +1,6 @@
 import time
 from typing import Optional
-from sensors.DHT11 import DHT11
+from sensors.DHT11 import DHT11Sensor
 from sensors.sensor import BaseSensor
 import logging
 
@@ -21,21 +21,23 @@ class TemperatureSensor(BaseSensor):
         read_sensor: Attempts to read the temperature from the sensor, with anomaly detection and range validation.
     """
     def __init__(self, pin: int, anomaly_detection: bool = True, min_value: float = 0.0, max_value: float = 50.0, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.dht_sensor: Optional[DHT11] = None
         self.pin: int = pin
+        self.dht_sensor: Optional[DHT11Sensor] = None
         self.anomaly_detection: bool = anomaly_detection
         self.min_value: float = min_value
         self.max_value: float = max_value
         self.logger: logging.Logger = logging.getLogger('app_logger')
-        self.configure_sensor()
+        super().__init__(*args, **kwargs)
 
     def configure_sensor(self) -> None:
         """
         Initializes the DHT11 sensor with the specified GPIO pin.
         """
+        if not hasattr(self, 'pin'):
+            self.logger.error("Sensor pin not set before sensor configuration.")
+            return
         try:
-            self.dht_sensor = DHT11(self.pin)
+            self.dht_sensor = DHT11Sensor(self.pin)
             self.logger.info(f"Temperature sensor on pin {self.pin} configured.")
         except Exception as e:
             self.logger.error(f"Failed to configure temperature sensor on pin {self.pin}: {e}")
@@ -67,7 +69,7 @@ class TemperatureSensor(BaseSensor):
                     if self.anomaly_detection:
                         if self.detect_anomaly(temperature):
                             self.logger.warning(
-                                f"Anomaly was detected for value temperature={temperature}, return NaN.")
+                                f"Anomaly detector return True for temperature={temperature}, return NaN.")
                             return float('nan')
                         else:
                             self.logger.info(f"Anomaly not found.")

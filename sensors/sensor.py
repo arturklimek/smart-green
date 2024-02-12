@@ -176,7 +176,7 @@ class BaseSensor(ABC):
         except ValueError as e:
             raise ValueError(f"Cannot convert value to int: {value}") from e
 
-    def is_in_range(value, min_value, max_value) -> bool:
+    def is_in_range(self, value: float, min_value: float, max_value: float) -> bool:
         """
         Checks if a given value is within a specified range, inclusive.
 
@@ -215,8 +215,8 @@ class BaseSensor(ABC):
                              if now - reading['datetime'] <= datetime.timedelta(seconds=max_age_seconds)]
 
         if len(relevant_readings) < required_history:
-            self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned True to complete the list.")
-            return True
+            self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned False to complete the list.")
+            return False
 
         if len(relevant_readings) < max_history:
             relevant_readings = relevant_readings[-max_history:]
@@ -239,5 +239,5 @@ class BaseSensor(ABC):
         """
         Destructor method that ensures the sensor reading loop is stopped before the object is deleted.
         """
-        self.logger.info("Destroying BaseSensor instance and stopping the reading loop.")
+        self.logger.info("Destroying BaseSensor instance.")
         self.stop_reading()
