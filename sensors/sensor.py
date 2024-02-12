@@ -1,9 +1,12 @@
 import logging
+import math
 import threading
 import time
 from collections import deque
 from abc import ABC, abstractmethod
 import datetime
+import numpy as np
+
 
 class BaseSensor(ABC):
     def __init__(self, read_frequency: int = 60, max_readings: int = 100, start_immediately: bool = False):
@@ -40,13 +43,13 @@ class BaseSensor(ABC):
             self.start_reading()
 
     @abstractmethod
-    def configure_sensor(self):
+    def configure_sensor(self) -> None:
         """
         Configures the sensor for reading. This method must be implemented by subclasses to set up sensor-specific configurations.
         """
         pass
 
-    def start_reading(self):
+    def start_reading(self) -> None:
         """
         Starts the sensor reading loop in a separate thread. If the loop is already running, this method does nothing.
         """
@@ -59,7 +62,7 @@ class BaseSensor(ABC):
             except Exception as e:
                 self.logger.error(f"Failed to start sensor reading: {e}")
 
-    def stop_reading(self):
+    def stop_reading(self) -> None:
         """
         Stops the sensor reading loop if it is currently running. Waits for the reading thread to terminate.
         """
@@ -72,18 +75,23 @@ class BaseSensor(ABC):
             except Exception as e:
                 self.logger.error(f"Error while stopping sensor reading: {e}")
 
-    def _read_sensor_loop(self):
+    def _read_sensor_loop(self) -> None:
         """
         The main loop that reads sensor data at the specified frequency until stopped. Each reading is stored with its timestamp and UTC timestamp in the readings deque.
         """
         while self.running:
             try:
-                reading = self.read_sensor()
-                self.readings.append({
-                    "datetime": datetime.datetime.now(),
-                    "utc_timestamp": datetime.datetime.utcnow().timestamp(),
-                    "value": reading
-                })
+                reading = self.read_sensor() # TODO: Update - add database usage
+                if reading is not None and not math.isnan(reading):
+                    new_record = {
+                        "datetime": datetime.datetime.now(),
+                        "utc_timestamp": datetime.datetime.utcnow().timestamp(),
+                        "value": reading
+                    }
+                    self.logger.info(f"Add to readings new value: {new_record}")
+                    self.readings.append(new_record)
+                else:
+                    self.logger.warning(f"Incorrect data for reading={reading}")
             except Exception as e:
                 self.logger.error(f"Error during sensor reading: {e}")
             finally:
@@ -99,7 +107,7 @@ class BaseSensor(ABC):
         """
         pass
 
-    def get_latest_reading(self):
+    def get_latest_reading(self) -> dict:
         """
         Retrieves the most recent sensor reading along with its timestamp.
 
@@ -108,7 +116,7 @@ class BaseSensor(ABC):
         """
         return self.readings[-1] if self.readings else None
 
-    def get_all_readings(self):
+    def get_all_readings(self) -> list:
         """
         Retrieves all stored sensor readings.
 
@@ -116,6 +124,116 @@ class BaseSensor(ABC):
             list of dicts: A list of all stored sensor readings with their timestamps.
         """
         return list(self.readings)
+
+    @staticmethod
+    def is_number(value) -> bool:
+        """
+        Checks if the given value is a number (either an integer or a float).
+
+        Args:
+            value: The value to check.
+
+        Returns:
+            bool: True if the value is a number, False otherwise.
+        """
+        return isinstance(value, (int, float))
+
+    @staticmethod
+    def to_float(value) -> float:
+        """
+        Attempts to convert the given value to a float. If the conversion is not possible, raises a ValueError.
+
+        Args:
+            value: The value to convert.
+
+        Returns:
+            float: The converted value.
+
+        Raises:
+            ValueError: If the value cannot be converted to a float.
+        """
+        try:
+            return float(value)
+        except ValueError as e:
+            raise ValueError(f"Cannot convert value to float: {value}") from e
+
+    @staticmethod
+    def to_int(value) -> int:
+        """
+        Attempts to convert the given value to an integer. If the conversion is not possible, raises a ValueError.
+
+        Args:
+            value: The value to convert.
+
+        Returns:
+            int: The converted value.
+
+        Raises:
+            ValueError: If the value cannot be converted to an int.
+        """
+        try:
+            return int(value)
+        except ValueError as e:
+            raise ValueError(f"Cannot convert value to int: {value}") from e
+
+    def is_in_range(value, min_value, max_value) -> bool:
+        """
+        Checks if a given value is within a specified range, inclusive.
+
+        Args:
+            value: The value to check.
+            min_value: The minimum value of the range.
+            max_value: The maximum value of the range.
+
+        Returns:
+            bool: True if the value is within the range, False otherwise.
+
+        Raises:
+            ValueError: If the provided value is not a number.
+        """
+        if not BaseSensor.is_number(value):
+            raise ValueError("Provided value is not a number.")
+        return min_value <= value <= max_value
+
+    def detect_anomaly(self, new_value, max_history=10, required_history=3, max_age_seconds=800, acceptable_deviation=3) -> bool:
+        """
+        Detects anomalies in sensor readings using Z-score calculation. It considers only the latest 'max_history' readings
+        within the 'max_age_seconds' to ensure relevance and gradual changes are not marked as anomalies.
+
+        Args:
+            new_value (float): The new sensor value to evaluate.
+            max_history (int): Maximum number of recent readings to consider for anomaly detection.
+            required_history (int): Determines the minimum number of historical entries to correctly perform the analysis
+            max_age_seconds (int): Maximum age in seconds for readings to be considered in the analysis.
+            acceptable_deviation (int): Determines the threshold for anomaly detection
+
+        Returns:
+            bool: True if the value is an anomaly, False otherwise.
+        """
+        now = datetime.datetime.now()
+        relevant_readings = [reading['value'] for reading in self.readings
+                             if now - reading['datetime'] <= datetime.timedelta(seconds=max_age_seconds)]
+
+        if len(relevant_readings) < required_history:
+            self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned True to complete the list.")
+            return True
+
+        if len(relevant_readings) < max_history:
+            relevant_readings = relevant_readings[-max_history:]
+
+        mean = np.mean(relevant_readings)
+        standard_deviation = np.std(relevant_readings)
+
+        self.logger.info(f"relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
+
+        if standard_deviation == 0:
+            self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns True.")
+            return True
+
+        z_score = (new_value - mean) / standard_deviation
+        reply = abs(z_score) > acceptable_deviation
+        self.logger.info(f"z_score={z_score}, reply={reply}")
+        return reply
 
     def __del__(self):
         """
