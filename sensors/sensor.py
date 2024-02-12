@@ -227,8 +227,8 @@ class BaseSensor(ABC):
         self.logger.info(f"relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
 
         if standard_deviation == 0:
-            self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns True.")
-            return True
+            self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns False.")
+            return False
 
         z_score = (new_value - mean) / standard_deviation
         reply = abs(z_score) > acceptable_deviation
