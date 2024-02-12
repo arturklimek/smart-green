@@ -1,9 +1,10 @@
+from typing import Dict, Optional, Type
 import Adafruit_DHT
 import threading
 import RPi.GPIO as GPIO
 import logging
 
-class DHTSensorSingleton:
+class DHT11:
     """
     A singleton class to manage access to a DHT sensor. This class ensures that only one instance
     per GPIO pin is created, facilitating shared access to DHT sensors across different parts of an
@@ -26,10 +27,15 @@ class DHTSensorSingleton:
         pin (int): The GPIO pin number where the sensor is connected.
         sensor_type (Adafruit_DHT.DHTxx, optional): The type of DHT sensor. Defaults to Adafruit_DHT.DHT11.
     """
-    _instances = {}
-    _lock = threading.Lock()
+    _instances: Dict[int, 'DHT11'] = {}
+    _lock: threading.Lock = threading.Lock()
 
-    def __new__(cls, pin, sensor_type=Adafruit_DHT.DHT11):
+    sensor_type: Adafruit_DHT.DHTxx
+    pin: int
+    last_read: Optional[Dict[str, float]] = None
+    logger: logging.Logger
+
+    def __new__(cls: Type['DHT11'], pin: int, sensor_type: Adafruit_DHT.DHTxx = Adafruit_DHT.DHT11) -> 'DHT11':
         """
         Ensures that only one instance of DHTSensorSingleton per GPIO pin is created. If an instance for a given pin
         already exists, it returns that instance; otherwise, it creates a new one.
@@ -39,20 +45,20 @@ class DHTSensorSingleton:
             sensor_type (Adafruit_DHT.DHTxx, optional): The type of DHT sensor. Defaults to Adafruit_DHT.DHT11.
 
         Returns:
-            DHTSensorSingleton: An instance of the DHTSensorSingleton class for the specified GPIO pin.
+            DHT11: An instance of the DHTSensorSingleton class for the specified GPIO pin.
         """
         with cls._lock:
             if pin not in cls._instances:
-                instance = super(DHTSensorSingleton, cls).__new__(cls)
+                instance = super(DHT11, cls).__new__(cls)
                 instance.sensor_type = sensor_type
                 instance.pin = pin
-                instance.last_read = None
+                instance.last_read = None  # Type hints są już zadeklarowane na poziomie klasy
                 instance.logger = logging.getLogger('app_logger')
                 instance._initialize_gpio(pin)
                 cls._instances[pin] = instance
             return cls._instances[pin]
 
-    def _initialize_gpio(self, pin):
+    def _initialize_gpio(self, pin: int) -> None:
         """
         Initializes the GPIO settings for the specified pin. This method sets the GPIO mode
         and prepares the pin for input.
@@ -69,7 +75,7 @@ class DHTSensorSingleton:
             self.logger.error(f"Failed to initialize GPIO pin {pin} for DHT sensor: {e}")
             raise
 
-    def read(self):
+    def read(self) -> Optional[Dict[str, float]]:
         """
         Performs a read operation on the DHT sensor to get the current humidity and temperature values.
 
