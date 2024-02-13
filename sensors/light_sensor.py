@@ -63,7 +63,7 @@ class LightSensor(BaseSensor):
                     return float('nan')
 
                 if self.anomaly_detection:
-                    if self.detect_anomaly(new_value=light_intensity):
+                    if self.detect_anomaly(new_value=light_intensity, acceptable_deviation=1000):
                         self.logger.warning(
                             f"Anomaly detected for light intensity={light_intensity} lux, returning NaN.")
                         return float('nan')
