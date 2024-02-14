@@ -1,0 +1,84 @@
+sensors:
+  - name: soilMoistureSensor1
+    type: SoilMoistureSensor
+    params:
+      read_frequency: 30
+      i2c_address: 0x48
+
+  - name: temperatureSensor1
+    type: TemperatureSensor
+    params:
+      read_frequency: 30
+      pin: 4
+
+  - name: humiditySensor1
+    type: HumiditySensor
+    params:
+      read_frequency: 30
+      pin: 4
+
+  - name: lightSensor1
+    type: LightSensor
+    params:
+      read_frequency: 30
+      i2c_address: 0x23
+
+actuators:
+  - name: pumpActuator1
+    type: BaseActuator
+    params:
+      gpio_pin: 26
+      initial_state: False
+
+  - name: ventilationActuator1
+    type: BaseActuator
+    params:
+      gpio_pin: 13
+      initial_state: False
+
+  - name: lightingActuator1
+    type: BaseActuator
+    params:
+      gpio_pin: 19
+      initial_state: False
+
+controllers:
+  - type: IrrigationController
+    sensors:
+      soilMoistureSensor1:
+        threshold: 60
+        comparison: LOWER
+    actuator: pumpActuator1
+    params:
+      check_interval: 60
+      cooldown_period: 600
+      pump_flow_rate: 240
+      water_volume: 0.4
+      max_lift_height: 3
+      current_lift_height: 1
+
+  - type: VentilationController
+    sensors:
+      temperatureSensor1:
+        threshold: 26
+        comparison: HIGHER
+      humiditySensor1:
+        threshold: 80
+        comparison: HIGHER
+    actuator: ventilationActuator1
+    params:
+      check_interval: 60
+      cooldown_period: 600
+
+  - type: LightingController
+    sensors:
+      lightSensor1:
+        threshold: 250
+        comparison: LOWER
+    actuator: lightingActuator1
+    params:
+      check_interval: 60
+      cooldown_period: 60
+      activation_time: 300
+      start_hour: 9
+      end_hour: 17
