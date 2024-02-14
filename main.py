@@ -1,2 +1,15 @@
+import time
+import RPi.GPIO as GPIO
+from app import App
+
+def main():
+    try:
+        application = App()
+        time.sleep(1)
+        application.run_app()
+    finally:
+        pass
+        # GPIO.cleanup() # TODO: add cleaning of PINs used by the application and not all of them
+
 if __name__ == '__main__':
-    pass
+    main()
