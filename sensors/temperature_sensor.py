@@ -20,10 +20,9 @@ class TemperatureSensor(BaseSensor):
         configure_sensor: Initializes the DHT11 sensor.
         read_sensor: Attempts to read the temperature from the sensor, with anomaly detection and range validation.
     """
-    def __init__(self, pin: int, anomaly_detection: bool = True, min_value: float = 0.0, max_value: float = 50.0, *args, **kwargs) -> None:
+    def __init__(self, pin: int, min_value: float = 0.0, max_value: float = 50.0, *args, **kwargs) -> None:
         self.pin: int = pin
         self.dht_sensor: Optional[DHT11Sensor] = None
-        self.anomaly_detection: bool = anomaly_detection
         self.min_value: float = min_value
         self.max_value: float = max_value
         self.logger: logging.Logger = logging.getLogger('app_logger')

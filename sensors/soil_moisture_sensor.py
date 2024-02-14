@@ -22,11 +22,10 @@ class SoilMoistureSensor(BaseSensor):
         configure_sensor: Initializes the ADS1115 ADC converter.
         read_sensor: Attempts to read the soil moisture level from the sensor, with anomaly detection and range validation.
     """
-    def __init__(self, i2c_address: int = 0x48, channel: int = 0, anomaly_detection: bool = True, min_value: float = 0.0, max_value: float = 3.3, *args, **kwargs) -> None:
+    def __init__(self, i2c_address: int = 0x48, channel: int = 0, min_value: float = 0.5, max_value: float = 3.3, *args, **kwargs) -> None:
         self.i2c_address: int = i2c_address
         self.channel: int = channel
         self.ads1115_converter: Optional[ADS1115Converter] = None
-        self.anomaly_detection: bool = anomaly_detection
         self.min_value: float = min_value
         self.max_value: float = max_value
         self.logger: logging.Logger = logging.getLogger('app_logger')

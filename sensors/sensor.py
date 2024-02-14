@@ -9,13 +9,14 @@ import numpy as np
 
 
 class BaseSensor(ABC):
-    def __init__(self, read_frequency: int = 60, max_readings: int = 100, start_immediately: bool = False):
+    def __init__(self, read_frequency: int = 60, max_readings: int = 100, start_immediately: bool = False, anomaly_detection: bool = True):
         """
         Abstract base class for sensors, providing a framework for reading sensor data at a regular interval, storing a fixed number of recent readings, and allowing for immediate or delayed start of data collection.
 
         Attributes:
             logger (logging.Logger): Logger instance for logging sensor operation messages.
             read_frequency (int): Frequency in seconds at which the sensor readings are taken.
+            anomaly_detection (bool): Flag indicating whether anomaly detection is enabled.
             max_readings (int): Maximum number of recent sensor readings to store.
             readings (collections.deque): A deque object storing the latest sensor readings along with their timestamps.
             read_thread (threading.Thread | None): The thread object that runs the sensor reading loop. None if not started.
@@ -28,6 +29,7 @@ class BaseSensor(ABC):
         """
         self.logger = logging.getLogger('app_logger')
         self.read_frequency = read_frequency
+        self.anomaly_detection: bool = anomaly_detection
         self.max_readings = max_readings
         self.readings = deque(maxlen=max_readings)
         self.read_thread = None
@@ -86,6 +88,7 @@ class BaseSensor(ABC):
                     new_record = {
                         "datetime": datetime.datetime.now(),
                         "utc_timestamp": datetime.datetime.utcnow().timestamp(),
+                        "timestamp": time.time(),
                         "value": reading
                     }
                     self.logger.info(f"Add to readings new value: {new_record}")
@@ -237,6 +240,15 @@ class BaseSensor(ABC):
             return reply
         except Exception as ex:
             self.logger.error(f"Error on anomaly detector: {ex}")
+
+    def get_read_frequency(self):
+        return self.read_frequency
+
+    def get_anomaly_detection(self):
+        return self.anomaly_detection
+
+    def set_anomaly_detection(self, anomaly_detection_state: bool = True):
+        self.anomaly_detection = anomaly_detection_state
 
     def __del__(self):
         """

@@ -20,10 +20,9 @@ class LightSensor(BaseSensor):
         configure_sensor: Initializes the BH1750 sensor.
         read_sensor: Attempts to read the light intensity from the sensor, with anomaly detection and range validation.
     """
-    def __init__(self, i2c_address: int = 0x23, anomaly_detection: bool = True, min_value: float = 0.0, max_value: float = 65535.0, *args, **kwargs) -> None:
+    def __init__(self, i2c_address: int = 0x23, min_value: float = 0.0, max_value: float = 65535.0, *args, **kwargs) -> None:
         self.i2c_address: int = i2c_address
         self.bh1750_sensor: Optional[BH1750Sensor] = None
-        self.anomaly_detection: bool = anomaly_detection
         self.min_value: float = min_value
         self.max_value: float = max_value
         self.logger: logging.Logger = logging.getLogger('app_logger')

@@ -11,7 +11,6 @@ class HumiditySensor(BaseSensor):
 
     Attributes:
         pin (int): GPIO pin number where the DHT11 sensor is connected.
-        anomaly_detection (bool): Flag indicating whether anomaly detection is enabled.
         min_value (float): Minimum acceptable humidity value for anomaly detection.
         max_value (float): Maximum acceptable humidity value for anomaly detection.
         logger (logging.Logger): Logger for recording operational messages.
@@ -20,10 +19,9 @@ class HumiditySensor(BaseSensor):
         configure_sensor: Initializes the DHT11 sensor.
         read_sensor: Attempts to read the humidity from the sensor, with anomaly detection and range validation.
     """
-    def __init__(self, pin: int, anomaly_detection: bool = True, min_value: float = 20.0, max_value: float = 90.0, *args, **kwargs) -> None:
+    def __init__(self, pin: int, min_value: float = 20.0, max_value: float = 90.0, *args, **kwargs) -> None:
         self.pin: int = pin
         self.dht_sensor: Optional[DHT11Sensor] = None
-        self.anomaly_detection: bool = anomaly_detection
         self.min_value: float = min_value
         self.max_value: float = max_value
         self.logger: logging.Logger = logging.getLogger('app_logger')
