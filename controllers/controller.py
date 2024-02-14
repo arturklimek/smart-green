@@ -7,7 +7,7 @@ from actuators.actuator import BaseActuator
 from sensors.sensor import BaseSensor
 
 class BaseController:
-    def __init__(self, check_interval: float, sensors: List[Dict], actuator: Optional[BaseActuator] = None, activation_time: Optional[int] = None, cooldown_period: int = 60, start_hour: Optional[int] = None, end_hour: Optional[int] = None):
+    def __init__(self, sensors: List[Dict],  actuator: Optional[BaseActuator] = None, check_interval: float = 60 , activation_time: Optional[int] = None, cooldown_period: int = 60, start_hour: Optional[int] = None, end_hour: Optional[int] = None):
         """
         Initialize the base controller with the given configuration.
 
@@ -220,7 +220,7 @@ class BaseController:
         try:
             sensor = sensor_dict['sensor']
             threshold = sensor_dict['threshold']
-            comparison = sensor_dict.get('comparison', lambda x, y: x > y)
+            comparison = sensor_dict.get('comparison')
             data = self.calculate_average_from_last_readings(sensor)
             if data is None:
                 self.logger.info(f"No average data available for sensor: {sensor}. Skipping activation check.")
