@@ -6,16 +6,17 @@ from collections import deque
 from abc import ABC, abstractmethod
 import datetime
 import numpy as np
-
+from databases.influx import InfluxDBManager
 
 class BaseSensor(ABC):
-    def __init__(self, read_frequency: int = 60, max_readings: int = 100, start_immediately: bool = False, anomaly_detection: bool = True):
+    def __init__(self, name: str, read_frequency: int = 60, max_readings: int = 100, start_immediately: bool = False, anomaly_detection: bool = True):
         """
         Abstract base class for sensors, providing a framework for reading sensor data at a regular interval, storing a fixed number of recent readings, and allowing for immediate or delayed start of data collection.
 
         Attributes:
             logger (logging.Logger): Logger instance for logging sensor operation messages.
             read_frequency (int): Frequency in seconds at which the sensor readings are taken.
+            name (str): Stores the name senosra.
             anomaly_detection (bool): Flag indicating whether anomaly detection is enabled.
             max_readings (int): Maximum number of recent sensor readings to store.
             readings (collections.deque): A deque object storing the latest sensor readings along with their timestamps.
@@ -28,6 +29,7 @@ class BaseSensor(ABC):
             start_immediately (bool, optional): Whether to start reading sensor data immediately upon object creation. Defaults to False.
         """
         self.logger = logging.getLogger('app_logger')
+        self.name = name
         self.read_frequency = read_frequency
         self.anomaly_detection: bool = anomaly_detection
         self.max_readings = max_readings
@@ -60,9 +62,9 @@ class BaseSensor(ABC):
             try:
                 self.read_thread = threading.Thread(target=self._read_sensor_loop, daemon=True)
                 self.read_thread.start()
-                self.logger.info("Sensor reading started.")
+                self.logger.info(f"Sensor name={self.name} reading started.")
             except Exception as ex:
-                self.logger.error(f"Failed to start sensor reading: {ex}")
+                self.logger.error(f"Failed to start sensor name={self.name} reading: {ex}")
 
     def stop_reading(self) -> None:
         """
@@ -73,17 +75,18 @@ class BaseSensor(ABC):
             try:
                 self.read_thread.join()
                 self.read_thread = None
-                self.logger.info("Sensor reading stopped.")
+                self.logger.info("Sensor name={self.name} reading stopped.")
             except Exception as ex:
-                self.logger.error(f"Error while stopping sensor reading: {ex}")
+                self.logger.error(f"Error while stopping sensor name={self.name} reading: {ex}")
 
     def _read_sensor_loop(self) -> None:
         """
         The main loop that reads sensor data at the specified frequency until stopped. Each reading is stored with its timestamp and UTC timestamp in the readings deque.
         """
+        influx_manager = InfluxDBManager()
         while self.running:
             try:
-                reading = self.read_sensor() # TODO: Update - add database usage
+                reading = self.read_sensor()
                 if reading is not None and not math.isnan(reading):
                     new_record = {
                         "datetime": datetime.datetime.now(),
@@ -93,10 +96,14 @@ class BaseSensor(ABC):
                     }
                     self.logger.info(f"Add to readings new value: {new_record}")
                     self.readings.append(new_record)
+                    measurement_name = self.__class__.__name__
+                    fields = {"value": reading}
+                    tags = {"sensor_name": self.name}
+                    influx_manager.write_data(measurement=measurement_name, fields=fields, tags=tags)
                 else:
                     self.logger.warning(f"Incorrect data for reading={reading}")
             except Exception as ex:
-                self.logger.error(f"Error during sensor reading: {ex}")
+                self.logger.error(f"Error during sensor name={self.name} reading: {ex}")
             finally:
                 time.sleep(self.read_frequency)
 
@@ -219,7 +226,7 @@ class BaseSensor(ABC):
                                  if now - reading['datetime'] <= datetime.timedelta(seconds=max_age_seconds)]
 
             if len(relevant_readings) < required_history:
-                self.logger.warning(f"After time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned False to complete the list.")
+                self.logger.warning(f"Sensor name={self.name} after time filtering (max_age_seconds={max_age_seconds}), the list has too few elements = {len(relevant_readings)},  required={required_history} - returned False to complete the list.")
                 return False
 
             if len(relevant_readings) < max_history:
@@ -228,15 +235,15 @@ class BaseSensor(ABC):
             mean = np.mean(relevant_readings)
             standard_deviation = np.std(relevant_readings)
 
-            self.logger.info(f"relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
+            self.logger.info(f"Sensor name={self.name} relevant_readings={relevant_readings}, mean={mean}, standard_deviation={standard_deviation}")
 
             if standard_deviation == 0:
-                self.logger.warning(f"The standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns False.")
+                self.logger.warning(f"Sensor name={self.name} the standard_deviation is 0 (all readings are identical), the Z-score cannot be calculated, function returns False.")
                 return False
 
             z_score = (new_value - mean) / standard_deviation
             reply = abs(z_score) > acceptable_deviation
-            self.logger.info(f"z_score={z_score}, reply={reply}")
+            self.logger.info(f"Sensor name={self.name} z_score={z_score}, reply={reply}")
             return reply
         except Exception as ex:
             self.logger.error(f"Error on anomaly detector: {ex}")
@@ -254,5 +261,5 @@ class BaseSensor(ABC):
         """
         Destructor method that ensures the sensor reading loop is stopped before the object is deleted.
         """
-        self.logger.info("Destroying BaseSensor instance.")
+        self.logger.info(f"Destroying name={self.name} instance.")
         self.stop_reading()

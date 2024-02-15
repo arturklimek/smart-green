@@ -199,37 +199,42 @@ class App:
 
     def create_sensor(self, sensor_config: Dict[str, Any]) -> Optional[BaseSensor]:
         """
-        Creates a sensor object based on the validated configuration.
+        Creates and returns an instance of a sensor based on the provided configuration.
 
         Args:
-            sensor_config (Dict[str, Any]): Configuration dictionary for the sensor.
+            sensor_config (Dict[str, Any]): A dictionary containing the sensor configuration.
 
         Returns:
-            Optional[BaseSensor]: The created sensor object or None if creation failed due to invalid configuration.
+            Optional[BaseSensor]: An instance of the specified sensor type if successfully created, or None if there was an error or if required parameters were missing.
         """
         try:
             sensor_type = sensor_config['type']
+            sensor_name = sensor_config.get('name', None)
+            if not sensor_name:
+                self.logger.error(f"Missing 'name' for sensor of type {sensor_type}.")
+                return None
             params = sensor_config.get('params', {})
+            params['name'] = sensor_name
             sensor_params = {
                 'BaseSensor': {'optional': ['read_frequency', 'max_readings', 'start_immediately', 'anomaly_detection'],
-                               'required': []},
+                               'required': ['name']},
                 'TemperatureSensor': {
                     'optional': ['max_value', 'min_value', 'read_frequency', 'max_readings', 'start_immediately',
-                                 'anomaly_detection'], 'required': ['pin']},
+                                 'anomaly_detection'], 'required': ['pin', 'name']},
                 'HumiditySensor': {
                     'optional': ['max_value', 'min_value', 'read_frequency', 'max_readings', 'start_immediately',
-                                 'anomaly_detection'], 'required': ['pin']},
+                                 'anomaly_detection'], 'required': ['pin', 'name']},
                 'LightSensor': {'optional': ['i2c_address', 'min_value', 'max_value', 'read_frequency', 'max_readings',
-                                             'start_immediately', 'anomaly_detection'], 'required': []},
+                                             'start_immediately', 'anomaly_detection'], 'required': ['name']},
                 'SoilMoistureSensor': {
                     'optional': ['i2c_address', 'channel', 'min_value', 'max_value', 'read_frequency', 'max_readings',
-                                 'start_immediately', 'anomaly_detection'], 'required': []}
+                                 'start_immediately', 'anomaly_detection'], 'required': ['name']}
             }
-            valid_params = {}
+            valid_params = {'name': sensor_name}
             if sensor_type in sensor_params:
                 for param in params:
                     if param in sensor_params[sensor_type]['required'] + sensor_params[sensor_type]['optional']:
-                        if isinstance(params[param], (int, float, bool)) or params[param] is None:
+                        if isinstance(params[param], (int, float, bool, str)) or params[param] is None:
                             valid_params[param] = params[param]
                         else:
                             self.logger.warning(f"Incorrect type for {param} in {sensor_type}, using default value.")
@@ -249,24 +254,28 @@ class App:
                 self.logger.error(f"Unknown sensor type: {sensor_type}")
                 return None
         except Exception as ex:
-            self.logger.error(f"Can not create sensor: {ex}")
+            self.logger.error(f"Cannot create sensor: {ex}")
 
     def create_actuator(self, actuator_config: Dict[str, Any]) -> Optional[BaseActuator]:
         """
-        Creates an actuator object based on the validated configuration.
+        Creates an actuator object based on the validated configuration, including a name read from the configuration.
 
         Args:
-            actuator_config (Dict[str, Any]): Configuration dictionary for the actuator.
+            actuator_config (Dict[str, Any]): Configuration dictionary for the actuator, including 'name'.
 
         Returns:
-            Optional[BaseActuator]: The created actuator object or None if creation failed due to invalid configuration.
+            Optional[BaseActuator]: The created actuator object with its name set, or None if creation failed.
         """
         try:
             actuator_type = actuator_config['type']
             params = actuator_config.get('params', {})
+            actuator_name = actuator_config.get('name', None)
+            if not actuator_name:
+                self.logger.error(f"Cant not create actuator without name")
+                return None
             required_params = ['gpio_pin']
             optional_params = ['initial_state']
-            valid_params = {}
+            valid_params = {'name': actuator_name}
             if actuator_type == 'BaseActuator':
                 for param in params:
                     if param in required_params + optional_params:
@@ -291,7 +300,8 @@ class App:
                 self.logger.error(f"Unknown actuator type: {actuator_type}")
                 return None
         except Exception as ex:
-            self.logger.error(f"Can not create actuator: {ex}")
+            self.logger.error(f"Cannot create actuator: {ex}")
+            return None
 
     def create_controller(self, controller_config: Dict[str, Any]) -> Optional[BaseController]:
         """

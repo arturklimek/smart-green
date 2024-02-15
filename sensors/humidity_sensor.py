@@ -33,9 +33,9 @@ class HumiditySensor(BaseSensor):
         """
         try:
             self.dht_sensor = DHT11Sensor(self.pin)
-            self.logger.info(f"Humidity sensor on pin {self.pin} configured.")
+            self.logger.info(f"Humidity sensor name={self.name} on pin {self.pin} configured.")
         except Exception as ex:
-            self.logger.error(f"Failed to configure humidity sensor on pin {self.pin}: {ex}")
+            self.logger.error(f"Failed to configure humidity sensor name={self.name} on pin {self.pin}: {ex}")
 
     def read_sensor(self) -> float:
         """
@@ -49,36 +49,36 @@ class HumiditySensor(BaseSensor):
             for _ in range(3):
                 sensor_data = self.dht_sensor.read_sensor_value()
                 if sensor_data is not None:
-                    self.logger.info(f"Humidity read from pin {self.pin}: {sensor_data['humidity']}%")
+                    self.logger.info(f"Humidity sensor name={self.name} read from pin {self.pin}: {sensor_data['humidity']}%")
                     humidity = self.to_float(sensor_data['humidity'])
 
                     if not self.is_number(humidity):
-                        self.logger.warning(f"Read value is not a number: {humidity}. Returning NaN.")
+                        self.logger.warning(f"Sensor name={self.name} read value is not a number: {humidity}. Returning NaN.")
                         return float('nan')
 
                     if not self.is_in_range(humidity, self.min_value, self.max_value):
                         self.logger.warning(
-                            f"Read value={humidity} is outside the acceptable range [{self.min_value}, {self.max_value}]. Returning NaN.")
+                            f"Sensor name={self.name} read value={humidity} is outside the acceptable range [{self.min_value}, {self.max_value}]. Returning NaN.")
                         return float('nan')
 
                     if self.anomaly_detection:
                         if self.detect_anomaly(new_value=humidity, acceptable_deviation=15):
                             self.logger.warning(
-                                f"Anomaly detector return True for humidity={humidity}, return NaN.")
+                                f"Sensor name={self.name} anomaly detector return True for humidity={humidity}, return NaN.")
                             return float('nan')
                         else:
-                            self.logger.info(f"Anomaly not found.")
+                            self.logger.info(f"Sensor name={self.name} - Anomaly not found.")
                     else:
-                        self.logger.info(f"Anomaly detection is disabled")
+                        self.logger.info(f"Sensor name={self.name} - Anomaly detection is disabled")
 
                     self.logger.info(
-                        f"Humidity read from pin {self.pin}: {humidity}%. Anomaly detection: {'enabled' if self.anomaly_detection else 'disabled'}")
+                        f"Sensor name={self.name} humidity read from pin {self.pin}: {humidity}%. Anomaly detection: {'enabled' if self.anomaly_detection else 'disabled'}")
                     return humidity
                 else:
-                    self.logger.warning(f"Failed to read humidity from pin {self.pin}.")
+                    self.logger.warning(f"Failed to read humidity sensor name={self.name} from pin {self.pin}.")
                     time.sleep(0.5)
-            self.logger.warning(f"Cannot read humidity from pin {self.pin} - return NaN.")
+            self.logger.warning(f"Cannot read humidity sensor name={self.name} from pin {self.pin} - return NaN.")
             return float('nan')
         except Exception as ex:
-            self.logger.error(f"Error reading humidity sensor on pin {self.pin}: {ex}")
+            self.logger.error(f"Error reading humidity sensor name={self.name} on pin {self.pin}: {ex}")
             return float('nan')

@@ -38,9 +38,9 @@ class SoilMoistureSensor(BaseSensor):
         """
         try:
             self.ads1115_converter = ADS1115Converter(self.i2c_address, self.channel)
-            self.logger.info(f"Soil moisture sensor on ADS1115 I2C address {self.i2c_address}, channel {self.channel} configured.")
+            self.logger.info(f"Soil moisture sensor name={self.name} on ADS1115 I2C address {self.i2c_address}, channel {self.channel} configured.")
         except Exception as ex:
-            self.logger.error(f"Failed to configure soil moisture sensor on ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {ex}")
+            self.logger.error(f"Failed to configure soil moisture sensor name={self.name} on ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {ex}")
 
     def read_sensor(self) -> float:
         """
@@ -53,33 +53,33 @@ class SoilMoistureSensor(BaseSensor):
         try:
             moisture_value = self.ads1115_converter.read()
             if moisture_value is not None:
-                self.logger.info(f"Soil moisture read from ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {moisture_value} V")
+                self.logger.info(f"Soil moisture sensor name={self.name} read from ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {moisture_value} V")
 
                 if not self.is_number(moisture_value):
-                    self.logger.warning(f"Read value is not a number: {moisture_value}. Returning NaN.")
+                    self.logger.warning(f"Sensor name={self.name}  read value is not a number: {moisture_value}. Returning NaN.")
                     return float('nan')
 
                 if not self.is_in_range(moisture_value, self.min_value, self.max_value):
                     self.logger.warning(
-                        f"Read value={moisture_value} V is outside the acceptable range [{self.min_value}, {self.max_value} V]. Returning NaN.")
+                        f"Sensor name={self.name} read value={moisture_value} V is outside the acceptable range [{self.min_value}, {self.max_value} V]. Returning NaN.")
                     return float('nan')
 
-                self.logger.info(f"Voltage value before conversion: {moisture_value}")
+                self.logger.info(f"Sensor name={self.name} voltage value before conversion: {moisture_value}")
                 moisture_percentage_value = self.convert_to_percentage(moisture_value, self.min_value, self.max_value)
 
                 if self.anomaly_detection:
                     if self.detect_anomaly(new_value=moisture_percentage_value, acceptable_deviation=50):
-                        self.logger.warning(f"Anomaly detected for soil moisture_value={moisture_value} V, moisture_percentage_value={moisture_percentage_value}, returning NaN.")
+                        self.logger.warning(f"Sensor name={self.name} - Anomaly detected for soil moisture_value={moisture_value} V, moisture_percentage_value={moisture_percentage_value}, returning NaN.")
                         return float('nan')
                     else:
-                        self.logger.info("Anomaly not found.")
+                        self.logger.info(f"Sensor name={self.name} - Anomaly not found.")
 
                 return moisture_percentage_value
             else:
-                self.logger.warning(f"Failed to read soil moisture from ADS1115 I2C address {self.i2c_address}, channel {self.channel}.")
+                self.logger.warning(f"Failed to read soil moisture sensor name={self.name} from ADS1115 I2C address {self.i2c_address}, channel {self.channel}.")
                 return float('nan')
         except Exception as ex:
-            self.logger.error(f"Error reading soil moisture sensor on ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {ex}")
+            self.logger.error(f"Error reading soil moisture sensor name={self.name} on ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {ex}")
             return float('nan')
 
     def convert_to_percentage(self, value: float, min_value: float, max_value: float) -> float:

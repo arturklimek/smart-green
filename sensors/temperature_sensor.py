@@ -33,13 +33,13 @@ class TemperatureSensor(BaseSensor):
         Initializes the DHT11 sensor with the specified GPIO pin.
         """
         if not hasattr(self, 'pin'):
-            self.logger.error("Sensor pin not set before sensor configuration.")
+            self.logger.error(f"Sensor name={self.name} pin not set before sensor configuration.")
             return
         try:
             self.dht_sensor = DHT11Sensor(self.pin)
-            self.logger.info(f"Temperature sensor on pin {self.pin} configured.")
+            self.logger.info(f"Temperature sensor name={self.name} on pin {self.pin} configured.")
         except Exception as ex:
-            self.logger.error(f"Failed to configure temperature sensor on pin {self.pin}: {ex}")
+            self.logger.error(f"Failed to configure temperature sensor name={self.name} on pin {self.pin}: {ex}")
 
     def read_sensor(self) -> float:
         """
@@ -53,36 +53,36 @@ class TemperatureSensor(BaseSensor):
             for _ in range(3):
                 sensor_data = self.dht_sensor.read_sensor_value()
                 if sensor_data is not None:
-                    self.logger.info(f"Temperature read from pin {self.pin}: {sensor_data['temperature']}°C")
+                    self.logger.info(f"Sensor name={self.name} temperature read from pin {self.pin}: {sensor_data['temperature']}°C")
                     temperature = self.to_float(sensor_data['temperature'])
 
                     if not self.is_number(temperature):
-                        self.logger.warning(f"Read value is not a number: {temperature}. Returning NaN.")
+                        self.logger.warning(f"Sensor name={self.name} read value is not a number: {temperature}. Returning NaN.")
                         return float('nan')
 
                     if not self.is_in_range(temperature, self.min_value, self.max_value):
                         self.logger.warning(
-                            f"Read value={temperature} is outside the acceptable range [{self.min_value}, {self.max_value}]. Returning NaN.")
+                            f"Sensor name={self.name} read value={temperature} is outside the acceptable range [{self.min_value}, {self.max_value}]. Returning NaN.")
                         return float('nan')
 
                     if self.anomaly_detection:
                         if self.detect_anomaly(new_value=temperature, acceptable_deviation=5):
                             self.logger.warning(
-                                f"Anomaly detector return True for temperature={temperature}, return NaN.")
+                                f"Sensor name={self.name} - Anomaly detector return True for temperature={temperature}, return NaN.")
                             return float('nan')
                         else:
-                            self.logger.info(f"Anomaly not found.")
+                            self.logger.info(f"Sensor name={self.name} - Anomaly not found.")
                     else:
-                        self.logger.info(f"Anomaly detection is disabled")
+                        self.logger.info(f"Sensor name={self.name} - Anomaly detection is disabled")
 
                     self.logger.info(
-                        f"Temperature read from pin {self.pin}: {temperature}°C. Anomaly detection: {'enabled' if self.anomaly_detection else 'disabled'}")
+                        f"Sensor name={self.name} - Temperature read from pin {self.pin}: {temperature}°C. Anomaly detection: {'enabled' if self.anomaly_detection else 'disabled'}")
                     return temperature
                 else:
-                    self.logger.warning(f"Failed to read temperature from pin {self.pin}.")
+                    self.logger.warning(f"Failed to read temperature sensor name={self.name} from pin {self.pin}.")
                     time.sleep(0.5)
-            self.logger.warning(f"Can not read temperature from pin {self.pin} - return NaN.")
+            self.logger.warning(f"Can not read temperature sensor name={self.name} from pin {self.pin} - return NaN.")
             return float('nan')
         except Exception as ex:
-            self.logger.error(f"Error reading temperature sensor on pin {self.pin}: {ex}")
+            self.logger.error(f"Error reading temperature sensor name={self.name} on pin {self.pin}: {ex}")
             return float('nan')

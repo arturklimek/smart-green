@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Any
 import RPi.GPIO as GPIO
 import datetime
+from databases.influx import InfluxDBManager
 
 class BaseActuator:
     """
@@ -9,12 +10,13 @@ class BaseActuator:
 
     Attributes:
         gpio_pin (int): The GPIO pin number associated with the actuator.
+        name (str): Stores the name actuator.
         state (bool): The current state of the actuator (True for active, False for inactive).
         last_state_change_time (datetime.datetime): Timestamp of the last state change.
         previous_state (bool): The state of the actuator prior to the current state.
     """
 
-    def __init__(self, gpio_pin: int, initial_state: Optional[bool] = None) -> None:
+    def __init__(self, gpio_pin: int, name: str, initial_state: Optional[bool] = None) -> None:
         """
         Initializes the actuator with the specified GPIO pin and an optional initial state.
 
@@ -24,6 +26,7 @@ class BaseActuator:
         """
         self.logger = logging.getLogger('app_logger')
         self.gpio_pin = gpio_pin
+        self.name = name
         self.state = False
         self.last_state_change_time = None
         self.previous_state = None
@@ -40,7 +43,7 @@ class BaseActuator:
                 else:
                     self.deactivate()
             except Exception as ex:
-                self.logger.error(f"Error setting initial state of actuator on pin {self.gpio_pin}: {ex}")
+                self.logger.error(f"Error setting initial state of actuator name={self.name} on pin {self.gpio_pin}: {ex}")
 
     def _update_state(self, new_state: bool, initial: bool = False) -> None:
         """
@@ -55,9 +58,9 @@ class BaseActuator:
                 self.previous_state = self.state
             self.state = new_state
             self.last_state_change_time = datetime.datetime.now()
-            self.logger.info(f"State of actuator {self.gpio_pin} changed to {self.state}.")
+            self.logger.info(f"State of actuator name={self.name} {self.gpio_pin} changed to {self.state}.")
         except Exception as ex:
-            self.logger.error(f"Error updating state of actuator on pin {self.gpio_pin}: {ex}")
+            self.logger.error(f"Error updating state of actuator name={self.name} on pin {self.gpio_pin}: {ex}")
 
     def activate(self) -> None:
         """
@@ -66,12 +69,18 @@ class BaseActuator:
         Raises:
             Exception: If there is an error in setting the GPIO pin.
         """
+        influx_manager = InfluxDBManager()
         try:
             GPIO.output(self.gpio_pin, GPIO.LOW)
             self._update_state(True)
-            self.logger.info(f"Actuator {self.gpio_pin} has been activated - set {GPIO.LOW}.")
+            self.logger.info(f"Actuator name={self.name} on pin: {self.gpio_pin} has been activated - set {GPIO.LOW}.")
+            influx_manager.write_data(
+                measurement="actuator_events",
+                fields={"state": 1},
+                tags={"actuator_name": self.name, "gpio_pin": str(self.gpio_pin)}
+            )
         except Exception as ex:
-            self.logger.error(f"Failed to activate actuator on pin {self.gpio_pin}: {ex}")
+            self.logger.error(f"Failed to activate actuator name={self.name} on pin {self.gpio_pin}: {ex}")
             raise
 
     def deactivate(self) -> None:
@@ -81,12 +90,18 @@ class BaseActuator:
         Raises:
             Exception: If there is an error in setting the GPIO pin.
         """
+        influx_manager = InfluxDBManager()
         try:
             GPIO.output(self.gpio_pin, GPIO.HIGH)
             self._update_state(False)
-            self.logger.info(f"Actuator {self.gpio_pin} has been deactivated - set {GPIO.HIGH}.")
+            self.logger.info(f"Actuator name={self.name} on pin: {self.gpio_pin} has been deactivated - set {GPIO.HIGH}.")
+            influx_manager.write_data(
+                measurement="actuator_events",
+                fields={"state": 0},
+                tags={"actuator_name": self.name, "gpio_pin": str(self.gpio_pin)}
+            )
         except Exception as ex:
-            self.logger.error(f"Failed to deactivate actuator on pin {self.gpio_pin}: {ex}")
+            self.logger.error(f"Failed to deactivate actuator name={self.name} on pin {self.gpio_pin}: {ex}")
             raise
 
     def toggle(self) -> None:
@@ -100,7 +115,7 @@ class BaseActuator:
                 self.activate()
             self.logger.info(f"Actuator {self.gpio_pin} state toggled.")
         except Exception as ex:
-            self.logger.error(f"Error toggling actuator on pin {self.gpio_pin}: {ex}")
+            self.logger.error(f"Error toggling actuator name={self.name} on pin {self.gpio_pin}: {ex}")
             raise
 
     def get_state(self) -> bool:
@@ -145,7 +160,7 @@ class BaseActuator:
         """
         try:
             GPIO.cleanup(self.gpio_pin) # TODO: clearing will change the setting to the default - such as IN mode, which may be unwanted
-            self.logger.info(f"Actuator {self.gpio_pin} has been cleaned up.")
+            self.logger.info(f"Actuator name={self.name} on pin: {self.gpio_pin} has been cleaned up.")
         except Exception as ex:
-            self.logger.error(f"Error during cleanup of actuator on pin {self.gpio_pin}: {ex}")
+            self.logger.error(f"Error during cleanup of actuator name={self.name} on pin {self.gpio_pin}: {ex}")
             raise
