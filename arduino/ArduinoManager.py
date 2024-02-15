@@ -42,10 +42,9 @@ class ArduinoManager:
             self.logger.debug(f"Try find new devices")
             ports = serial.tools.list_ports.comports()
             self.logger.debug(f"ports: {ports}")
-            # Zmieniamy kryterium wyszukiwania na VID i PID
             connected_arduinos = {
                 port.device: port.description for port in ports
-                if port.vid == 0x1a86 and port.pid == 0x7523  # VID i PID dla CH340
+                if port.vid == 0x1a86 and port.pid == 0x7523
             }
             self.logger.debug(f"connected_arduinos: {connected_arduinos}")
             self.update_arduinos(connected_arduinos)
@@ -169,11 +168,8 @@ class ArduinoManager:
             time.sleep(self.update_interval)
 
     def send_sensor_data_to_arduino(self, sensor1_key: str, sensor2_key: str):
-        # Zakładając, że `get_latest_reading` zwraca słownik z kluczami 'value' i 'type'
         sensor1_reading = self.sensors[sensor1_key].get_latest_reading()
         sensor2_reading = self.sensors[sensor2_key].get_latest_reading()
-
-        # Bezpośrednie przekazanie odczytów do formatowania
         line1 = self.format_sensor_message(sensor1_reading, sensor1_key)
         line2 = self.format_sensor_message(sensor2_reading, sensor2_key)
         self.broadcast_message(line1, line2)
@@ -182,10 +178,9 @@ class ArduinoManager:
         if sensor_reading is None:
             return "Data not available"
 
-        sensor_type = self.sensors[sensor_key].__class__.__name__  # Użycie klucza do identyfikacji typu sensora
+        sensor_type = self.sensors[sensor_key].__class__.__name__
         value = sensor_reading.get('value', 'N/A')
 
-        # Formatowanie wiadomości na podstawie typu sensora
         if sensor_type == "HumiditySensor":
             return f"Humidity: {int(value)} %"
         elif sensor_type == "TemperatureSensor":
