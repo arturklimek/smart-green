@@ -9,7 +9,26 @@ import time
 from sensors.sensor import BaseSensor
 
 class ArduinoManager:
+    """
+    Manages communication and interactions with Arduino devices connected via serial ports.
+
+    Attributes:
+        logger (logging.Logger): Logger for the class.
+        arduinos (Dict[str, Any]): Stores connected Arduino devices and their serial connections.
+        sensors (Dict[str, BaseSensor]): A dictionary of sensors that the manager will use to gather data.
+        scan_thread (Optional[threading.Thread]): Thread for scanning and connecting to Arduino devices.
+        reading_thread (Optional[threading.Thread]): Thread for reading sensor data and sending it to Arduino.
+        running (bool): Indicates whether the Arduino scanning and reading processes are active.
+        baud_rate (int): Baud rate for serial communication with Arduino devices.
+        update_interval (int): Time interval (in seconds) between sensor data readings and updates sent to Arduino.
+    """
     def __init__(self, sensors: Dict[str, BaseSensor]) -> None:
+        """
+        Initializes the ArduinoManager with a given set of sensors.
+
+        Args:
+            sensors (Dict[str, BaseSensor]): A dictionary mapping sensor names to sensor objects.
+        """
         self.logger: logging.Logger = logging.getLogger('app_logger')
         self.arduinos: Dict[str, Any] = {}
         self.sensors: Dict[str, BaseSensor] = sensors
@@ -21,6 +40,7 @@ class ArduinoManager:
         atexit.register(self.close_all_connections)
 
     def start_scan(self) -> None:
+        """Starts the scanning process for Arduino devices in a separate thread."""
         if not self.running:
             self.running = True
             self.scan_thread = threading.Thread(target=self.scan_for_arduinos)
@@ -29,6 +49,7 @@ class ArduinoManager:
             self.logger.info("Arduino scan started.")
 
     def stop_scan(self) -> None:
+        """Stops the scanning process for Arduino devices and closes all serial connections."""
         self.running = False
         if self.scan_thread:
             self.scan_thread.join()
@@ -37,6 +58,7 @@ class ArduinoManager:
             arduino['connection'].close()
 
     def scan_for_arduinos(self) -> None:
+        """Scans for Arduino devices connected via serial ports and updates the list of connected devices."""
         self.logger.debug(f"Start arduino scanning, self.running: {self.running}")
         while self.running:
             self.logger.debug(f"Try find new devices")
@@ -51,6 +73,12 @@ class ArduinoManager:
             time.sleep(1)
 
     def update_arduinos(self, connected_arduinos: Dict[str, str]) -> None:
+        """
+        Updates the list of connected Arduino devices based on the latest scan results.
+
+        Args:
+            connected_arduinos (Dict[str, str]): A dictionary of detected Arduino devices and their descriptions.
+        """
         for device, description in connected_arduinos.items():
             if device not in self.arduinos:
                 try:
@@ -71,6 +99,13 @@ class ArduinoManager:
                 self.logger.info(f"Arduino disconnected: {device}")
 
     def sendMessage(self, arduino_device: str, command: Dict[str, Any]) -> None:
+        """
+        Sends a command to a specific Arduino device.
+
+        Args:
+            arduino_device (str): The device identifier (port) of the Arduino to send the command to.
+            command (Dict[str, Any]): The command to send, formatted as a dictionary.
+        """
         if arduino_device in self.arduinos:
             json_data = json.dumps(command) + '\n'
             self.arduinos[arduino_device]['connection'].write(json_data.encode())
@@ -78,10 +113,26 @@ class ArduinoManager:
             self.logger.error(f"Arduino device {arduino_device} not found.")
 
     def broadcast_message(self, line1: str, line2: str) -> None:
+        """
+        Sends a message to all connected Arduino devices.
+
+        Args:
+            line1 (str): The first line of the message.
+            line2 (str): The second line of the message.
+        """
         for arduino_device in self.arduinos.keys():
             self.commandPrint(arduino_device, line1, line2)
 
     def readMessage(self, arduino_device: str) -> Optional[Dict[str, Any]]:
+        """
+        Reads a message from a specific Arduino device.
+
+        Args:
+            arduino_device (str): The device identifier (port) of the Arduino to read the message from.
+
+        Returns:
+            Optional[Dict[str, Any]]: The message read from the Arduino, if any, parsed as a dictionary.
+        """
         tempMessage = None
         timeout = 5
         start_time = time.time()
@@ -100,6 +151,17 @@ class ArduinoManager:
         return tempMessage
 
     def commandPrint(self, arduino_device: str, line1: str, line2: str) -> bool:
+        """
+        Sends a print command to an Arduino device to display messages on its LCD.
+
+        Args:
+            arduino_device (str): The device identifier (port) of the Arduino.
+            line1 (str): The first line of text to display.
+            line2 (str): The second line of text to display.
+
+        Returns:
+            bool: True if the command was successfully sent, False otherwise.
+        """
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -112,6 +174,17 @@ class ArduinoManager:
         return False
 
     def commandSet(self, arduino_device: str, element: str, value: str) -> bool:
+        """
+        Sends a set command to an Arduino device to change the value of a specified element.
+
+        Args:
+            arduino_device (str): The device identifier (port) of the Arduino.
+            element (str): The element whose value is to be set.
+            value (str): The new value for the element.
+
+        Returns:
+            bool: True if the command was successfully sent and acknowledged, False otherwise.
+        """
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -124,6 +197,17 @@ class ArduinoManager:
         return False
 
     def commandGet(self, arduino_device: str, element: str) -> bool | dict:
+        """
+        Sends a get command to an Arduino device to retrieve the value of a specified element.
+
+        Args:
+            arduino_device (str): The device identifier (port) of the Arduino.
+            element (str): The element whose value is to be retrieved.
+
+        Returns:
+            Union[bool, Dict[str, Any]]: False if the Arduino device is not found or the command couldn't be sent;
+            otherwise, a dictionary containing the response from the Arduino device.
+        """
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -145,6 +229,7 @@ class ArduinoManager:
         time.sleep(0.2)
 
     def start_reading(self) -> None:
+        """Starts the sensor data reading and broadcasting process in a separate thread."""
         if not self.reading_thread and self.sensors:
             self.reading_thread = threading.Thread(target=self.iterate_sensors)
             self.reading_thread.daemon = True
@@ -152,12 +237,14 @@ class ArduinoManager:
             self.logger.info("Sensor reading started.")
 
     def stop_reading(self) -> None:
+        """Stops the sensor data reading and broadcasting process."""
         self.running = False
         if self.reading_thread:
             self.reading_thread.join()
             self.logger.info("Sensor reading stopped.")
 
     def iterate_sensors(self) -> None:
+        """Iterates over sensors, reads data, and sends updates to connected Arduino devices."""
         sensor_keys = list(self.sensors.keys())
         sensor_index = 0
         while self.running:
@@ -168,6 +255,13 @@ class ArduinoManager:
             time.sleep(self.update_interval)
 
     def send_sensor_data_to_arduino(self, sensor1_key: str, sensor2_key: str) -> None:
+        """
+        Sends sensor data to all connected Arduino devices.
+
+        Args:
+            sensor1_key (str): The key of the first sensor whose data is to be sent.
+            sensor2_key (str): The key of the second sensor whose data is to be sent.
+        """
         sensor1_reading = self.sensors[sensor1_key].get_latest_reading()
         sensor2_reading = self.sensors[sensor2_key].get_latest_reading()
         line1 = self.format_sensor_message(sensor1_reading, sensor1_key)
@@ -175,6 +269,16 @@ class ArduinoManager:
         self.broadcast_message(line1, line2)
 
     def format_sensor_message(self, sensor_reading: Dict[str, Any], sensor_key: str) -> str:
+        """
+         Formats a sensor reading into a message suitable for displaying on an Arduino's LCD.
+
+         Args:
+             sensor_reading (Dict[str, Any]): The sensor reading to format.
+             sensor_key (str): The key of the sensor.
+
+         Returns:
+             str: The formatted message.
+         """
         if sensor_reading is None:
             return "Data not available"
 
@@ -193,11 +297,13 @@ class ArduinoManager:
             return "Unknown sensor type"
 
     def close_all_connections(self) -> None:
+        """Closes all serial connections to Arduino devices."""
         for device, arduino in self.arduinos.items():
             arduino['connection'].close()
             self.logger.info(f"Connection to Arduino {device} closed.")
 
     def __del__(self) -> None:
+        """Destructor method that ensures all Arduino serial connections are closed upon object deletion."""
         for device, arduino in self.arduinos.items():
             arduino['connection'].close()
             self.logger.info(f"Connection to Arduino {device} closed.")
