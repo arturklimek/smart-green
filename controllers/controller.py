@@ -158,7 +158,6 @@ class BaseController:
                         self.deactivate_actuator()
             except Exception as ex:
                 self.logger.error(f"Error during control loop execution: {ex}")
-
         self.logger.info("Control loop stopped.")
 
     def check_if_cooldown_passed(self) -> bool:
@@ -168,24 +167,19 @@ class BaseController:
         Returns:
             bool: True if the cooldown has passed, False otherwise.
         """
-        reference_time = self.last_deactivation if self.last_deactivation is not None else self.last_activation
+        if self.last_deactivation is not None:
+            time_since_reference = datetime.datetime.now() - self.last_deactivation
+            self.logger.debug(
+                f"time_since_reference: {time_since_reference}, cooldown_period: {self.cooldown_period}")
 
-        if reference_time is not None:
-            time_since_reference = datetime.datetime.now() - reference_time
-            total_cooldown = self.cooldown_period
-            if self.activation_time is not None:
-                activation_duration = datetime.timedelta(seconds=self.activation_time)
-                total_cooldown += activation_duration
-
-            self.logger.debug(f"Time since last reference: {time_since_reference}, Total cooldown: {total_cooldown}")
-            if time_since_reference >= total_cooldown:
+            if time_since_reference >= self.cooldown_period:
                 self.logger.info("The cooldown has passed, allowing new activations.")
                 return True
             else:
                 self.logger.info("The cooldown has not yet passed, skipping new activations.")
                 return False
         else:
-            self.logger.warning("No previous activation or deactivation, cooldown is considered to have passed.")
+            self.logger.info("No previous deactivation, allowing activations.")
             return True
 
     def is_within_operating_hours(self) -> bool:
@@ -201,9 +195,9 @@ class BaseController:
             current_hour = current_time.hour
             if self.start_hour < self.end_hour:
                 in_hours = self.start_hour <= current_hour < self.end_hour
-            else:  # Operating hours span across midnight
+            else:
                 in_hours = current_hour >= self.start_hour or current_hour < self.end_hour
-            self.logger.debug(f"Operating hours check, Current hour: {current_hour}, Within hours: {in_hours}")
+            self.logger.debug(f"Operating hours check, Current hour: {current_hour}, start_hour: {self.start_hour}, end_hour: {self.end_hour}, Within hours: {in_hours}")
             return in_hours
         return True
 
