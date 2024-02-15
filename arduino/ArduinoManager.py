@@ -9,18 +9,18 @@ import time
 from sensors.sensor import BaseSensor
 
 class ArduinoManager:
-    def __init__(self, sensors: Dict[str, BaseSensor]):
-        self.logger = logging.getLogger('app_logger')
-        self.arduinos = {}
-        self.sensors = sensors
-        self.scan_thread = None
-        self.reading_thread = None
-        self.running = False
-        self.baud_rate = 115200
-        self.update_interval = 10
+    def __init__(self, sensors: Dict[str, BaseSensor]) -> None:
+        self.logger: logging.Logger = logging.getLogger('app_logger')
+        self.arduinos: Dict[str, Any] = {}
+        self.sensors: Dict[str, BaseSensor] = sensors
+        self.scan_thread: Optional[threading.Thread] = None
+        self.reading_thread: Optional[threading.Thread] = None
+        self.running: bool = False
+        self.baud_rate: int = 115200
+        self.update_interval: int = 10
         atexit.register(self.close_all_connections)
 
-    def start_scan(self):
+    def start_scan(self) -> None:
         if not self.running:
             self.running = True
             self.scan_thread = threading.Thread(target=self.scan_for_arduinos)
@@ -28,7 +28,7 @@ class ArduinoManager:
             self.scan_thread.start()
             self.logger.info("Arduino scan started.")
 
-    def stop_scan(self):
+    def stop_scan(self) -> None:
         self.running = False
         if self.scan_thread:
             self.scan_thread.join()
@@ -36,7 +36,7 @@ class ArduinoManager:
         for device, arduino in self.arduinos.items():
             arduino['connection'].close()
 
-    def scan_for_arduinos(self):
+    def scan_for_arduinos(self) -> None:
         self.logger.debug(f"Start arduino scanning, self.running: {self.running}")
         while self.running:
             self.logger.debug(f"Try find new devices")
@@ -50,7 +50,7 @@ class ArduinoManager:
             self.update_arduinos(connected_arduinos)
             time.sleep(1)
 
-    def update_arduinos(self, connected_arduinos):
+    def update_arduinos(self, connected_arduinos: Dict[str, str]) -> None:
         for device, description in connected_arduinos.items():
             if device not in self.arduinos:
                 try:
@@ -62,26 +62,26 @@ class ArduinoManager:
                     time.sleep(2)
                     self.arduinos[device] = {'description': description, 'connection': connection}
                     self.logger.info(f"Arduino connected: {device}")
-                except serial.SerialException as e:
-                    self.logger.error(f"Could not open serial connection to {device}: {e}")
+                except serial.SerialException as ex:
+                    self.logger.error(f"Could not open serial connection to {device}: {ex}")
         for device in list(self.arduinos):
             if device not in connected_arduinos:
                 self.arduinos[device]['connection'].close()
                 del self.arduinos[device]
                 self.logger.info(f"Arduino disconnected: {device}")
 
-    def sendMessage(self, arduino_device, command: dict):
+    def sendMessage(self, arduino_device: str, command: Dict[str, Any]) -> None:
         if arduino_device in self.arduinos:
             json_data = json.dumps(command) + '\n'
             self.arduinos[arduino_device]['connection'].write(json_data.encode())
         else:
             self.logger.error(f"Arduino device {arduino_device} not found.")
 
-    def broadcast_message(self, line1: str, line2: str):
+    def broadcast_message(self, line1: str, line2: str) -> None:
         for arduino_device in self.arduinos.keys():
             self.commandPrint(arduino_device, line1, line2)
 
-    def readMessage(self, arduino_device) -> dict:
+    def readMessage(self, arduino_device: str) -> Optional[Dict[str, Any]]:
         tempMessage = None
         timeout = 5
         start_time = time.time()
@@ -99,7 +99,7 @@ class ArduinoManager:
                 break
         return tempMessage
 
-    def commandPrint(self, arduino_device, line1: str, line2: str) -> bool:
+    def commandPrint(self, arduino_device: str, line1: str, line2: str) -> bool:
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -111,7 +111,7 @@ class ArduinoManager:
             return True
         return False
 
-    def commandSet(self, arduino_device, element: str, value: str) -> bool:
+    def commandSet(self, arduino_device: str, element: str, value: str) -> bool:
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -123,7 +123,7 @@ class ArduinoManager:
             return True
         return False
 
-    def commandGet(self, arduino_device, element: str) -> bool | dict:
+    def commandGet(self, arduino_device: str, element: str) -> bool | dict:
         if not arduino_device:
             self.logger.warning("No arduino indicated")
             return False
@@ -135,7 +135,7 @@ class ArduinoManager:
             return tempOutput
         return False
 
-    def takeDeviceInfo(self, arduino_device):
+    def takeDeviceInfo(self, arduino_device: str):
         time.sleep(0.2)
         device_type = self.arduinos[arduino_device]['connection'].commandGET("devicetype")
         self.logger.info(f"devicetype: {device_type}")
@@ -144,20 +144,20 @@ class ArduinoManager:
         self.logger.info(f"version: {device_version}")
         time.sleep(0.2)
 
-    def start_reading(self):
+    def start_reading(self) -> None:
         if not self.reading_thread and self.sensors:
             self.reading_thread = threading.Thread(target=self.iterate_sensors)
             self.reading_thread.daemon = True
             self.reading_thread.start()
             self.logger.info("Sensor reading started.")
 
-    def stop_reading(self):
+    def stop_reading(self) -> None:
         self.running = False
         if self.reading_thread:
             self.reading_thread.join()
             self.logger.info("Sensor reading stopped.")
 
-    def iterate_sensors(self):
+    def iterate_sensors(self) -> None:
         sensor_keys = list(self.sensors.keys())
         sensor_index = 0
         while self.running:
@@ -167,7 +167,7 @@ class ArduinoManager:
             sensor_index += 1
             time.sleep(self.update_interval)
 
-    def send_sensor_data_to_arduino(self, sensor1_key: str, sensor2_key: str):
+    def send_sensor_data_to_arduino(self, sensor1_key: str, sensor2_key: str) -> None:
         sensor1_reading = self.sensors[sensor1_key].get_latest_reading()
         sensor2_reading = self.sensors[sensor2_key].get_latest_reading()
         line1 = self.format_sensor_message(sensor1_reading, sensor1_key)
@@ -192,12 +192,12 @@ class ArduinoManager:
         else:
             return "Unknown sensor type"
 
-    def close_all_connections(self):
+    def close_all_connections(self) -> None:
         for device, arduino in self.arduinos.items():
             arduino['connection'].close()
             self.logger.info(f"Connection to Arduino {device} closed.")
 
-    def __del__(self):
+    def __del__(self) -> None:
         for device, arduino in self.arduinos.items():
             arduino['connection'].close()
             self.logger.info(f"Connection to Arduino {device} closed.")
