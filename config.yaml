@@ -53,7 +53,7 @@ controllers:
   - type: IrrigationController
     sensors:
       soilMoistureSensor1:
-        threshold: 55
+        threshold: 0.55
         comparison: LOWER
     actuator: pumpActuator1
     params:
@@ -62,7 +62,7 @@ controllers:
       pump_flow_rate: 240
       water_volume: 0.1
       max_lift_height: 3
-      current_lift_height: 0.2
+      current_lift_height: 0.3
 
   - type: VentilationController
     sensors:
