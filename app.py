@@ -38,7 +38,7 @@ class App:
         loads components based on the application configuration, and logs the initialization completion.
         """
         self.setup_dir_structure([LOG_DIR_PATH])
-        LoggerManager.setup_logger('app_logger', os.path.join(LOG_DIR_PATH, 'app.log'), level_console=logging.DEBUG, level_file=logging.DEBUG)
+        LoggerManager.setup_logger('app_logger', os.path.join(LOG_DIR_PATH, 'app.log'), level_console=logging.INFO, level_file=logging.DEBUG)
         self.logger: logging.Logger = logging.getLogger('app_logger')
         self.app_config: AppConfig = AppConfig(APP_CONFIG_PATH)
         self.sensors: Dict[str, BaseSensor] = {}
