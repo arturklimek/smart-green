@@ -24,8 +24,8 @@ class InfluxDBManager:
             InfluxDBManager: The singleton instance of the InfluxDBManager class.
         """
         if cls._instance is None:
-            cls._instance.logger = logging.getLogger('app_logger')
             cls._instance = super(InfluxDBManager, cls).__new__(cls)
+            cls._instance.logger = logging.getLogger('app_logger')
             cls._instance.client = None
             cls._initialize_connection()
         return cls._instance
