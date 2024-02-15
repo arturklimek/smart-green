@@ -34,7 +34,7 @@ class LoggerManager:
             logger = logging.getLogger(log_name)
             if not logger.handlers:
                 logger.setLevel(logging.DEBUG)
-                file_handler = RotatingFileHandler(log_file, maxBytes=5000000, backupCount=2, encoding='utf-8')
+                file_handler = RotatingFileHandler(log_file, maxBytes=25000000, backupCount=10, encoding='utf-8')
                 file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
                 file_handler.setFormatter(file_formatter)
                 file_handler.setLevel(level_file)
