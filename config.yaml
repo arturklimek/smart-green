@@ -1,3 +1,10 @@
+influxdb:
+  host: 'localhost'
+  port: 8086
+  username: 'garden_core_user'
+  password: 'JC@o7JmEhf'
+  database: 'garden'
+
 sensors:
   - name: soilMoistureSensor1
     type: SoilMoistureSensor
@@ -81,4 +88,4 @@ controllers:
       cooldown_period: 60
       activation_time: 300
       start_hour: 9
-      end_hour: 17
+      end_hour: 22
