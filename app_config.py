@@ -67,8 +67,8 @@ class AppConfig:
                     file_config = yaml.safe_load(file) or {}
                 self.merge_config(file_config)
                 logger.info(f"Configuration loaded from {self.config_file}")
-            except Exception as e:
-                logger.error(f"Failed to load configuration: {e}")
+            except Exception as ex:
+                logger.error(f"Failed to load configuration: {ex}")
                 logger.info("Using default configuration.")
         else:
             logger.warning(f"Config file {self.config_file} does not exist. Using default configuration.")
@@ -105,8 +105,8 @@ class AppConfig:
             with open(self.config_file, 'w', encoding='utf-8') as file:
                 yaml.dump(self.config_data, file, allow_unicode=True, default_flow_style=False)
                 logger.info("Configuration saved successfully.")
-        except Exception as e:
-            logger.error(f"Failed to save configuration: {e}")
+        except Exception as ex:
+            logger.error(f"Failed to save configuration: {ex}")
 
     def update_config(self, new_config_data: dict):
         """
@@ -122,8 +122,8 @@ class AppConfig:
             self.config_data.update(new_config_data)
             self.save_config()
             logger.info("Configuration updated successfully.")
-        except Exception as e:
-            logger.error(f"Failed to update configuration: {e}")
+        except Exception as ex:
+            logger.error(f"Failed to update configuration: {ex}")
 
     def get_config(self):
         """

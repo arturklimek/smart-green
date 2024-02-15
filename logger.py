@@ -45,6 +45,6 @@ class LoggerManager:
                 logger.addHandler(file_handler)
                 logger.addHandler(console_handler)
             return logger
-        except Exception as e:
-            print(f"Error setting up logger {log_name}: {e}")
+        except Exception as ex:
+            print(f"Error setting up logger {log_name}: {ex}")
             raise
