@@ -2,32 +2,46 @@ import logging
 from influxdb import InfluxDBClient, exceptions
 from typing import Dict
 from app_config import APP_CONFIG_PATH, AppConfig
+import time
 
 class InfluxDBManager:
     """
-    A singleton class to manage InfluxDB operations such as establishing a connection
-    and writing data points to the database.
+    Manages connections and data operations with an InfluxDB database instance.
+    Implements a singleton pattern to ensure only one connection exists throughout the application.
+    Handles reconnection attempts if the initial connection fails or if the connection is lost.
 
     Attributes:
-        client (InfluxDBClient): A client connection to InfluxDB.
-        logger (logging.Logger): Logger for logging messages.
+        client (InfluxDBClient): Client instance for connecting to an InfluxDB database.
+        logger (logging.Logger): Logger instance for logging messages.
     """
     _instance = None
 
     def __new__(cls):
         """
-        Creates a new instance of the InfluxDBManager class if one doesn't already exist.
-        Establishes a connection to an InfluxDB instance using the configuration specified in the
-        application's configuration file.
+        Ensures a single instance of the InfluxDBManager class is created. Initializes the connection to the InfluxDB database using configuration from the application's config file.
 
         Returns:
-            InfluxDBManager: A singleton instance of the InfluxDBManager class.
+            InfluxDBManager: The singleton instance of the InfluxDBManager class.
         """
         if cls._instance is None:
-            cls._instance = super(InfluxDBManager, cls).__new__(cls)
-            app_config = AppConfig(APP_CONFIG_PATH).get_config()
-            influx_config = app_config.get('influxdb', {})
             cls._instance.logger = logging.getLogger('app_logger')
+            cls._instance = super(InfluxDBManager, cls).__new__(cls)
+            cls._instance.client = None
+            cls._initialize_connection()
+        return cls._instance
+
+    @classmethod
+    def _initialize_connection(cls):
+        """
+        Initializes the connection to the InfluxDB database using the configuration specified in the application's configuration file. Attempts to reconnect if the initial connection fails, with a defined number of retries and interval between retries.
+        """
+        app_config = AppConfig(APP_CONFIG_PATH).get_config()
+        influx_config = app_config.get('influxdb', {})
+        retry_interval = 60
+        max_retries = 10
+        retries = 0
+
+        while retries < max_retries:
             try:
                 cls._instance.client = InfluxDBClient(
                     host=influx_config.get('host', 'localhost'),
@@ -38,39 +52,31 @@ class InfluxDBManager:
                 )
                 cls._instance.client.ping()
                 cls._instance.logger.info("Successfully connected to InfluxDB.")
-            except KeyError as ex:
-                cls._instance.logger.error(f"Missing InfluxDB configuration: {ex}")
-                cls._instance.client = None
-            except exceptions.InfluxDBClientError as ex:
-                cls._instance.logger.error(f"InfluxDB client error: {ex}")
-                cls._instance.client = None
-            except Exception as ex:
-                cls._instance.logger.error(f"Failed to initialize InfluxDB connection: {ex}")
-                cls._instance.client = None
-        return cls._instance
+                return
+            except (KeyError, exceptions.InfluxDBClientError, Exception) as ex:
+                cls._instance.logger.error(f"Failed to connect to InfluxDB, attempt {retries + 1} of {max_retries}: {ex}")
+                time.sleep(retry_interval)
+                retries += 1
+
+        cls._instance.logger.error("Exceeded maximum number of retries to connect to InfluxDB. Data write operations will be skipped.")
+        cls._instance.client = None
 
     def write_data(self, measurement: str, fields: Dict[str, float], tags: Dict[str, str]):
         """
-        Writes a data point to the InfluxDB database.
+        Writes a single data point to the InfluxDB database. If the InfluxDB client is not initialized, it attempts to reinitialize the connection before writing.
 
         Args:
-            measurement (str): The name of the measurement (table) to write the data point to.
-            fields (Dict[str, float]): The fields (key-value pairs) to write to the database.
-            tags (Dict[str, str]): The tags (key-value pairs) associated with the data point.
-
-        This method logs an error and aborts if the InfluxDB client has not been successfully initialized.
+            measurement (str): The measurement name to which the data point belongs.
+            fields (Dict[str, float]): A dictionary of field names and their values for the data point.
+            tags (Dict[str, str]): A dictionary of tag names and their values associated with the data point.
         """
         if not self.client:
-            self.logger.error("InfluxDB client is not initialized. Data write aborted.")
-            return
-
-        json_body = [
-            {
-                "measurement": measurement,
-                "tags": tags,
-                "fields": fields
-            }
-        ]
+            self.logger.warning("InfluxDB client is not initialized. Attempting to reconnect.")
+            self._initialize_connection()
+            if not self.client:
+                self.logger.error("Reconnection to InfluxDB failed. Data write aborted.")
+                return
+        json_body = [{"measurement": measurement, "tags": tags, "fields": fields}]
         try:
             self.client.write_points(json_body)
             self.logger.info(f"Data written to InfluxDB: {json_body}")
