@@ -53,7 +53,7 @@ controllers:
   - type: IrrigationController
     sensors:
       soilMoistureSensor1:
-        threshold: 60
+        threshold: 55
         comparison: LOWER
     actuator: pumpActuator1
     params:
