@@ -22,7 +22,7 @@ class SoilMoistureSensor(BaseSensor):
         configure_sensor: Initializes the ADS1115 ADC converter.
         read_sensor: Attempts to read the soil moisture level from the sensor, with anomaly detection and range validation.
     """
-    def __init__(self, i2c_address: int = 0x48, channel: int = 0, min_value: float = 0.5, max_value: float = 3.3, *args, **kwargs) -> None:
+    def __init__(self, i2c_address: int = 0x48, channel: int = 0, min_value: float = 0.0, max_value: float = 3.3, *args, **kwargs) -> None:
         self.i2c_address: int = i2c_address
         self.channel: int = channel
         self.ads1115_converter: Optional[ADS1115Converter] = None
@@ -65,7 +65,7 @@ class SoilMoistureSensor(BaseSensor):
                     return float('nan')
 
                 self.logger.info(f"Sensor name={self.name} voltage value before conversion: {moisture_value}")
-                moisture_percentage_value = self.convert_to_percentage(moisture_value, self.min_value, self.max_value)
+                moisture_percentage_value = self.convert_to_percentage(moisture_value)
 
                 if self.anomaly_detection:
                     if self.detect_anomaly(new_value=moisture_percentage_value, acceptable_deviation=50):
@@ -82,7 +82,7 @@ class SoilMoistureSensor(BaseSensor):
             self.logger.error(f"Error reading soil moisture sensor name={self.name} on ADS1115 I2C address {self.i2c_address}, channel {self.channel}: {ex}")
             return float('nan')
 
-    def convert_to_percentage(self, value: float, min_value: float, max_value: float) -> float:
+    def convert_to_percentage(self, value: float, min_value: float = 0.8, max_value: float = 3.3) -> float:
         """
         Converts an analog value to a percentage based on the specified minimum and maximum values,
         with an inverse relationship between the analog value and the percentage.
