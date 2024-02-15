@@ -60,14 +60,14 @@ controllers:
       check_interval: 60
       cooldown_period: 600
       pump_flow_rate: 240
-      water_volume: 0.4
+      water_volume: 0.3
       max_lift_height: 3
-      current_lift_height: 1
+      current_lift_height: 0.5
 
   - type: VentilationController
     sensors:
       temperatureSensor1:
-        threshold: 26
+        threshold: 27
         comparison: HIGHER
       humiditySensor1:
         threshold: 80
@@ -75,7 +75,7 @@ controllers:
     actuator: ventilationActuator1
     params:
       check_interval: 60
-      cooldown_period: 600
+      cooldown_period: 300
 
   - type: LightingController
     sensors:
@@ -85,7 +85,7 @@ controllers:
     actuator: lightingActuator1
     params:
       check_interval: 60
-      cooldown_period: 60
-      activation_time: 300
+      cooldown_period: 180
+      activation_time: 1800
       start_hour: 9
-      end_hour: 22
+      end_hour: 21
