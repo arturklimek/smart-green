@@ -4,6 +4,7 @@ import time
 from typing import List, Optional, Dict, Any
 from actuators.actuator import BaseActuator
 from app_config import LOG_DIR_PATH, AppConfig, APP_CONFIG_PATH
+from arduino.ArduinoManager import ArduinoManager
 from controllers.controller import BaseController
 from controllers.irrigation_controller import IrrigationController
 from controllers.lighting_controller import LightingController
@@ -14,6 +15,7 @@ from sensors.light_sensor import LightSensor
 from sensors.sensor import BaseSensor
 from sensors.soil_moisture_sensor import SoilMoistureSensor
 from sensors.temperature_sensor import TemperatureSensor
+import uuid
 
 class App:
     """
@@ -36,7 +38,7 @@ class App:
         loads components based on the application configuration, and logs the initialization completion.
         """
         self.setup_dir_structure([LOG_DIR_PATH])
-        LoggerManager.setup_logger('app_logger', os.path.join(LOG_DIR_PATH, 'app.log'), level_console=logging.INFO, level_file=logging.DEBUG)
+        LoggerManager.setup_logger('app_logger', os.path.join(LOG_DIR_PATH, 'app.log'), level_console=logging.DEBUG, level_file=logging.DEBUG)
         self.logger: logging.Logger = logging.getLogger('app_logger')
         self.app_config: AppConfig = AppConfig(APP_CONFIG_PATH)
         self.sensors: Dict[str, BaseSensor] = {}
@@ -64,6 +66,7 @@ class App:
         self.running = True
         self.start_sensors_reading()
         self.start_controllers()
+        self.run_arduinoLCD()
         try:
             while self.running:
                 time.sleep(0.5)
@@ -109,13 +112,15 @@ class App:
         """
         Initiates the start sequence for all configured controllers within the application.
         """
+        self.logger.debug(f"start_controllers - controllers len: {len(self.controllers)}.")
         for name, controller in self.controllers.items():
+            self.logger.debug(f"Try start controller by name: {name}.")
             try:
                 if controller:
                     controller.start()
-                    self.logger.info(f"{controller.__class__.__name__} started.")
+                    self.logger.info(f"{controller.__class__.__name__} started - name: {name}.")
             except Exception as ex:
-                self.logger.error(f"Failed to start {controller.__class__.__name__}: {ex}")
+                self.logger.error(f"Failed to start {controller.__class__.__name__} - name: {name}: {ex}")
 
     def stop_controllers(self) -> None:
         """
@@ -166,17 +171,29 @@ class App:
                 if sensor:
                     self.sensors[name] = sensor
 
+            self.logger.debug(f"config.get('actuators', []) len: {len(config.get('actuators', []))}")
             for actuator_config in config.get('actuators', []):
+                self.logger.debug(f"actuator_config: {actuator_config}")
                 name = actuator_config['name']
                 actuator = self.create_actuator(actuator_config)
                 if actuator:
                     self.actuators[name] = actuator
+                    self.logger.debug(f"Actuator added to dict on name: {name}")
+                else:
+                    self.logger.error(f"Actuator not created - can not add to dict")
 
+            self.logger.debug(f"config.get('controllers', []) len: {len(config.get('controllers', []))}")
             for controller_config in config.get('controllers', []):
-                name = controller_config.get('name', '')
+                self.logger.debug(f"controller_config: {controller_config}")
+                name = controller_config.get('name', self.generate_unique_name())
                 controller = self.create_controller(controller_config)
                 if controller:
+                    while name in self.controllers:
+                        name = self.generate_unique_name()
                     self.controllers[name] = controller
+                    self.logger.debug(f"Controller added to dict on name: {name}")
+                else:
+                    self.logger.error(f"Controller not created - can not add to dict")
         except Exception as ex:
             self.logger.error(f"Error loading components: {ex}")
 
@@ -355,6 +372,21 @@ class App:
             Optional[BaseActuator]: The actuator object if found, None otherwise.
         """
         return self.actuators.get(name, None)
+
+    def generate_unique_name(self):
+        """
+        Generates a unique name for a controller using a combination of timestamp and UUID.
+
+        Returns:
+            str: A unique name string.
+        """
+        unique_name = f"Controller_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        return unique_name
+
+    def run_arduinoLCD(self):
+        arduino_lcd_manager = ArduinoManager(self.sensors)
+        arduino_lcd_manager.start_scan()
+        arduino_lcd_manager.start_reading()
 
     def __del__(self) -> None:
         """

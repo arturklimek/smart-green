@@ -5,7 +5,7 @@ from app import App
 def main():
     try:
         application = App()
-        time.sleep(1)
+        time.sleep(3)
         application.run_app()
     finally:
         pass
