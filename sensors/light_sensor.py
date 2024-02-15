@@ -35,9 +35,9 @@ class LightSensor(BaseSensor):
         """
         try:
             self.bh1750_sensor = BH1750Sensor(self.i2c_address)
-            self.logger.info(f"Light sensor on I2C address {self.i2c_address} configured.")
+            self.logger.info(f"Light sensor name={self.name} on I2C address {self.i2c_address} configured.")
         except Exception as ex:
-            self.logger.error(f"Failed to configure light sensor on I2C address {self.i2c_address}: {ex}")
+            self.logger.error(f"Failed to configure light sensor name={self.name} on I2C address {self.i2c_address}: {ex}")
 
     def read_sensor(self) -> float:
         """
@@ -50,29 +50,29 @@ class LightSensor(BaseSensor):
         try:
             light_intensity = self.bh1750_sensor.read_sensor_value()
             if light_intensity is not None:
-                self.logger.info(f"Light intensity read from I2C address {self.i2c_address}: {light_intensity} lux")
+                self.logger.info(f"Sensor name={self.name} light intensity read from I2C address {self.i2c_address}: {light_intensity} lux")
 
                 if not self.is_number(light_intensity):
-                    self.logger.warning(f"Read value is not a number: {light_intensity}. Returning NaN.")
+                    self.logger.warning(f"Sensor name={self.name} read value is not a number: {light_intensity}. Returning NaN.")
                     return float('nan')
 
                 if not self.is_in_range(light_intensity, self.min_value, self.max_value):
                     self.logger.warning(
-                        f"Read value={light_intensity} lux is outside the acceptable range [{self.min_value}, {self.max_value} lux]. Returning NaN.")
+                        f"Sensor name={self.name} read value={light_intensity} lux is outside the acceptable range [{self.min_value}, {self.max_value} lux]. Returning NaN.")
                     return float('nan')
 
                 if self.anomaly_detection:
                     if self.detect_anomaly(new_value=light_intensity, acceptable_deviation=1000):
                         self.logger.warning(
-                            f"Anomaly detected for light intensity={light_intensity} lux, returning NaN.")
+                            f"Sensor name={self.name} - Anomaly detected for light intensity={light_intensity} lux, returning NaN.")
                         return float('nan')
                     else:
-                        self.logger.info("Anomaly not found.")
+                        self.logger.info(f"Sensor name={self.name} - Anomaly not found.")
 
                 return light_intensity
             else:
-                self.logger.warning(f"Failed to read light intensity from I2C address {self.i2c_address}.")
+                self.logger.warning(f"Failed to read light intensity sensor name={self.name} from I2C address {self.i2c_address}.")
                 return float('nan')
         except Exception as ex:
-            self.logger.error(f"Error reading light sensor on I2C address {self.i2c_address}: {ex}")
+            self.logger.error(f"Error reading light sensor name={self.name} on I2C address {self.i2c_address}: {ex}")
             return float('nan')
