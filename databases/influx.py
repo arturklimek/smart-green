@@ -37,9 +37,15 @@ class InfluxDBManager:
         """
         app_config = AppConfig(APP_CONFIG_PATH).get_config()
         influx_config = app_config.get('influxdb', {})
+        required_keys = ['host', 'port', 'username', 'password', 'database']
         retry_interval = 60
         max_retries = 10
         retries = 0
+
+        if not all(key in influx_config for key in required_keys):
+            cls._instance.logger.error("Incomplete InfluxDB configuration. Please check your configuration file.")
+            cls._instance.client = None
+            return
 
         while retries < max_retries:
             try:
