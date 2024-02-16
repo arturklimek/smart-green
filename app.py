@@ -275,7 +275,7 @@ class App:
                 return None
             required_params = ['gpio_pin']
             optional_params = ['initial_state']
-            valid_params = {'name': actuator_name}
+            valid_params = {'name': actuator_name, 'send_state_to_db': True}
             if actuator_type == 'BaseActuator':
                 for param in params:
                     if param in required_params + optional_params:
