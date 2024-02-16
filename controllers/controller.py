@@ -214,7 +214,7 @@ class BaseController:
         try:
             sensor = sensor_dict['sensor']
             threshold = sensor_dict['threshold']
-            comparison = sensor_dict.get('comparison')
+            comparison = sensor_dict.get('comparison', lambda x, y: x > y)
             data = self.calculate_average_from_last_readings(sensor)
             if data is None:
                 self.logger.info(f"No average data available for sensor: {sensor}. Skipping activation check.")
