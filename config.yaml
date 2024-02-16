@@ -80,7 +80,7 @@ controllers:
   - type: LightingController
     sensors:
       lightSensor1:
-        threshold: 250
+        threshold: 500
         comparison: LOWER
     actuator: lightingActuator1
     params:
