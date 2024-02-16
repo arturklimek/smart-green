@@ -4,7 +4,6 @@ import logging
 import threading
 from typing import List, Dict, Callable, Optional, Union
 from actuators.actuator import BaseActuator
-from databases.influx import InfluxDBManager
 from sensors.sensor import BaseSensor
 
 class BaseController:
@@ -125,20 +124,6 @@ class BaseController:
             try:
                 self.logger.debug("Checking conditions...")
                 time.sleep(self.check_interval)
-                actuator_state = self.actuator.get_state() if self.actuator else None
-                if actuator_state is not None:
-                    tmp_actuator_status = None
-                    if actuator_state is False:
-                        tmp_actuator_status = 0
-                    if actuator_state is True:
-                        tmp_actuator_status = 1
-                    if tmp_actuator_status is not None:
-                        influx_manager = InfluxDBManager()
-                        influx_manager.write_data(
-                            measurement="actuator_events",
-                            fields={"state": tmp_actuator_status},
-                            tags={"actuator_name": self.actuator.get_name(), "gpio_pin": str(self.actuator.get_gpio_pin())}
-                        )
                 if not self.is_within_operating_hours():
                     self.logger.info("Outside of operating hours, skipping activation checks.")
                     continue
@@ -154,6 +139,7 @@ class BaseController:
                             break
                     except Exception as ex:
                         self.logger.error(f"Error during sensor check: {ex}")
+                actuator_state = self.actuator.get_state() if self.actuator else None
                 self.logger.debug(f"Actuator state: {actuator_state}, Activation needed: {activation_needed}")
                 if activation_needed:
                     if not actuator_state:
