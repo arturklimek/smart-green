@@ -74,7 +74,7 @@ class BaseActuator:
         while self.state_send_thread_running:
             influx_manager = InfluxDBManager()
             influx_manager.write_data(
-                measurement="actuator_state",
+                measurement="actuator_events",
                 fields={"state": int(self.state)},
                 tags={"actuator_name": self.name, "gpio_pin": str(self.gpio_pin)}
             )
