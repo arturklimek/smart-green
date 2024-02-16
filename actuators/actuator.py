@@ -70,7 +70,7 @@ class BaseActuator:
         except Exception as ex:
             self.logger.error(f"Error updating state of actuator name={self.name} on pin {self.gpio_pin}: {ex}")
 
-    def _send_state_to_db(self, frequency: int = 60):
+    def _send_state_to_db(self, frequency: int = 300):
         while self.state_send_thread_running:
             influx_manager = InfluxDBManager()
             influx_manager.write_data(
