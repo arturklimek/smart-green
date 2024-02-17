@@ -71,6 +71,12 @@ class BaseActuator:
             self.logger.error(f"Error updating state of actuator name={self.name} on pin {self.gpio_pin}: {ex}")
 
     def _send_state_to_db(self, frequency: int = 300):
+        """
+        Continuously sends the current state to the database at a specified frequency.
+
+        Args:
+            frequency (int): The frequency, in seconds, at which the state is sent to the database. Defaults to 300 seconds (5 minutes).
+        """
         while self.state_send_thread_running:
             influx_manager = InfluxDBManager()
             influx_manager.write_data(
@@ -81,17 +87,29 @@ class BaseActuator:
             time.sleep(frequency)
 
     def start_sending_state(self):
+        """
+        Starts a new thread to continuously send the state to the database.
+        """
         if not self.state_send_thread_running:
             self.state_send_thread_running = True
             self.state_send_thread = threading.Thread(target=self._send_state_to_db, daemon=True)
             self.state_send_thread.start()
 
     def stop_sending_state(self):
+        """
+        Stops the state sending thread if it is currently running.
+        """
         if self.state_send_thread_running:
             self.state_send_thread_running = False
             self.state_send_thread.join()
 
     def is_sending_state(self) -> bool:
+        """
+        Checks whether the state sending thread is currently running.
+
+        Returns:
+            bool: True if the state sending thread is running, False otherwise.
+        """
         return self.state_send_thread_running
 
     def activate(self) -> None:
