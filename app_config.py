@@ -13,9 +13,7 @@ DEFAULT_CONFIG = {
 class AppConfig:
     """
     AppConfig is a singleton class responsible for handling application configuration.
-
-    It loads, updates, and saves configuration data from/to a YAML file. This class
-    ensures that there is only one instance of the configuration across the application.
+    It loads, updates, and saves configuration data from/to a YAML file. This class ensures that there is only one instance of the configuration across the application.
 
     Attributes:
         config_file (str): Path to the YAML configuration file.
@@ -34,10 +32,7 @@ class AppConfig:
     def __new__(cls, config_file: str):
         """
         Create a new instance of AppConfig or return the existing one.
-
-        This method implements the singleton pattern. If an instance of AppConfig
-        doesn't exist, it creates a new one and initializes it. If an instance
-        already exists, it returns the existing instance.
+        This method implements the singleton pattern. If an instance of AppConfig doesn't exist, it creates a new one and initializes it. If an instance already exists, it returns the existing instance.
 
         Args:
             config_file (str): The path to the configuration file in YAML format.
@@ -55,10 +50,7 @@ class AppConfig:
     def load_config(self):
         """
         Load configuration from a YAML file, merging it with default values.
-
-        This method checks if the configuration file exists. If it does, it loads the
-        configuration and merges it with the default values defined in DEFAULT_CONFIG.
-        If the file does not exist, it uses the default configuration.
+        This method checks if the configuration file exists. If it does, it loads the configuration and merges it with the default values defined in DEFAULT_CONFIG. If the file does not exist, it uses the default configuration.
         """
         logger = logging.getLogger('app_logger')
         if os.path.exists(self.config_file):
@@ -96,9 +88,7 @@ class AppConfig:
     def save_config(self):
         """
         Save the current configuration to a YAML file.
-
-        Writes the current state of config_data to the YAML file specified in config_file.
-        If an error occurs during saving, it logs an error message.
+        Writes the current state of config_data to the YAML file specified in config_file. If an error occurs during saving, it logs an error message.
         """
         logger = logging.getLogger('app_logger')
         try:
@@ -114,8 +104,6 @@ class AppConfig:
 
         Args:
             new_config_data (dict): A dictionary containing configuration data to be updated.
-
-        Updates the current configuration (config_data) with new_config_data and saves it to the file.
         """
         logger = logging.getLogger('app_logger')
         try:

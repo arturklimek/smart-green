@@ -20,9 +20,7 @@ import uuid
 class App:
     """
     A main application class responsible for initializing and managing the entire application lifecycle.
-
-    This class initializes the application's logging system, loads the configuration, manages sensors,
-    actuators, and controllers, and handles the starting and stopping of the application.
+    This class initializes the application's logging system, loads the configuration, manages sensors, actuators, and controllers, and handles the starting and stopping of the application.
 
     Attributes:
         logger (logging.Logger): Application-wide logger.
@@ -34,8 +32,7 @@ class App:
     """
     def __init__(self) -> None:
         """
-        Initializes the application, sets up the directory structure, initializes logging,
-        loads components based on the application configuration, and logs the initialization completion.
+        Initializes the application, sets up the directory structure, initializes logging, loads components based on the application configuration, and logs the initialization completion.
         """
         self.setup_dir_structure([LOG_DIR_PATH])
         LoggerManager.setup_logger('app_logger', os.path.join(LOG_DIR_PATH, 'app.log'), level_console=logging.INFO, level_file=logging.DEBUG)
@@ -60,8 +57,7 @@ class App:
 
     def run_app(self) -> None:
         """
-        Starts the application by beginning sensor readings, starting controllers,
-        and entering the main application loop until a stop signal is received.
+        Starts the application by beginning sensor readings, starting controllers, and entering the main application loop until a stop signal is received.
         """
         self.running = True
         self.start_sensors_reading()
@@ -76,8 +72,7 @@ class App:
 
     def stop_app(self) -> None:
         """
-        Stops the application by signaling the main loop to terminate and waits for a short period
-        to ensure all components are properly shutdown.
+        Stops the application by signaling the main loop to terminate and waits for a short period to ensure all components are properly shutdown.
         """
         self.running = False
         time.sleep(4)

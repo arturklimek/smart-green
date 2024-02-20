@@ -2,7 +2,7 @@ influxdb:
   host: 'localhost'
   port: 8086
   username: 'garden_core_user'
-  password: 'JC@o7JmEhf'
+  password: ''
   database: 'garden'
 
 sensors:
@@ -60,7 +60,7 @@ controllers:
       check_interval: 60
       cooldown_period: 600
       pump_flow_rate: 240
-      water_volume: 0.1
+      water_volume: 0.2
       max_lift_height: 3
       current_lift_height: 0.3
 

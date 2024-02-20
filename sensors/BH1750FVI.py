@@ -30,8 +30,7 @@ class BH1750Sensor:
 
     def __new__(cls: Type['BH1750Sensor'], i2c_address: int = 0x23) -> 'BH1750Sensor':
         """
-        Ensures that only one instance of BH1750Sensor per I2C address is created. If an instance for a given address
-        already exists, it returns that instance; otherwise, it creates a new one.
+        Ensures that only one instance of BH1750Sensor per I2C address is created. If an instance for a given address already exists, it returns that instance; otherwise, it creates a new one.
 
         Args:
             i2c_address (int, optional): The I2C address of the BH1750 sensor. Defaults to 0x23.

@@ -29,8 +29,7 @@ class IrrigationController(BaseController):
     @staticmethod
     def calculate_pump_activation_time(pump_flow_rate: float, water_volume: float, max_lift_height: float = None, current_lift_height: float = None) -> int:
         """
-        Calculates the time (in seconds) the pump should be activated to irrigate the given volume of water,
-        optionally considering the effect of lift height on pump efficiency.
+        Calculates the time (in seconds) the pump should be activated to irrigate the given volume of water, optionally considering the effect of lift height on pump efficiency.
 
         Args:
             pump_flow_rate (float): The pump's flow rate in liters per hour.

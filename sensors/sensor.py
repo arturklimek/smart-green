@@ -207,8 +207,7 @@ class BaseSensor(ABC):
 
     def detect_anomaly(self, new_value, max_history=10, required_history=3, max_age_seconds=800, acceptable_deviation=3) -> bool:
         """
-        Detects anomalies in sensor readings using Z-score calculation. It considers only the latest 'max_history' readings
-        within the 'max_age_seconds' to ensure relevance and gradual changes are not marked as anomalies.
+        Detects anomalies in sensor readings using Z-score calculation. It considers only the latest 'max_history' readings within the 'max_age_seconds' to ensure relevance and gradual changes are not marked as anomalies.
 
         Args:
             new_value (float): The new sensor value to evaluate.

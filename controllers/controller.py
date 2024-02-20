@@ -184,8 +184,7 @@ class BaseController:
 
     def is_within_operating_hours(self) -> bool:
         """
-        Checks if the current time is within the operating hours, correctly handling
-        cases where the operating period spans across midnight.
+        Checks if the current time is within the operating hours, correctly handling cases where the operating period spans across midnight.
 
         Returns:
             bool: True if within operating hours, False otherwise.
