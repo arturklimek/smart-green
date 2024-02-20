@@ -62,7 +62,7 @@ class HumiditySensor(BaseSensor):
                         return float('nan')
 
                     if self.anomaly_detection:
-                        if self.detect_anomaly(new_value=humidity, acceptable_deviation=15):
+                        if self.detect_anomaly(new_value=humidity, acceptable_deviation=3):
                             self.logger.warning(
                                 f"Sensor name={self.name} anomaly detector return True for humidity={humidity}, return NaN.")
                             return float('nan')
