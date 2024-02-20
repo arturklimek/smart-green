@@ -68,7 +68,7 @@ class SoilMoistureSensor(BaseSensor):
                 moisture_percentage_value = self.convert_to_percentage(moisture_value)
 
                 if self.anomaly_detection:
-                    if self.detect_anomaly(new_value=moisture_percentage_value, acceptable_deviation=50):
+                    if self.detect_anomaly(new_value=moisture_percentage_value, acceptable_deviation=5):
                         self.logger.warning(f"Sensor name={self.name} - Anomaly detected for soil moisture_value={moisture_value} V, moisture_percentage_value={moisture_percentage_value}, returning NaN.")
                         return float('nan')
                     else:
