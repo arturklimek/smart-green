@@ -66,7 +66,7 @@ class TemperatureSensor(BaseSensor):
                         return float('nan')
 
                     if self.anomaly_detection:
-                        if self.detect_anomaly(new_value=temperature, acceptable_deviation=5):
+                        if self.detect_anomaly(new_value=temperature, acceptable_deviation=4):
                             self.logger.warning(
                                 f"Sensor name={self.name} - Anomaly detector return True for temperature={temperature}, return NaN.")
                             return float('nan')
