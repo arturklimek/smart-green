@@ -205,8 +205,7 @@ class ArduinoManager:
             element (str): The element whose value is to be retrieved.
 
         Returns:
-            Union[bool, Dict[str, Any]]: False if the Arduino device is not found or the command couldn't be sent;
-            otherwise, a dictionary containing the response from the Arduino device.
+            Union[bool, Dict[str, Any]]: False if the Arduino device is not found or the command couldn't be sent, otherwise, a dictionary containing the response from the Arduino device.
         """
         if not arduino_device:
             self.logger.warning("No arduino indicated")
@@ -294,7 +293,7 @@ class ArduinoManager:
         elif sensor_type == "SoilMoistureSensor":
             return f"Soil: {int(round(value,2)*100)} %"
         else:
-            return "Unknown sensor type"
+            return "Unknown"
 
     def close_all_connections(self) -> None:
         """Closes all serial connections to Arduino devices."""

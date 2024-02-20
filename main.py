@@ -8,8 +8,7 @@ def main():
         time.sleep(3)
         application.run_app()
     finally:
-        pass
-        # GPIO.cleanup() # TODO: add cleaning of PINs used by the application and not all of them
+        GPIO.cleanup() # TODO: add cleaning of PINs used by the application and not all of them
 
 if __name__ == '__main__':
     main()

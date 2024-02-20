@@ -6,8 +6,7 @@ import logging
 
 class TemperatureSensor(BaseSensor):
     """
-    A sensor class that extends BaseSensor for reading temperatures from a DHT11 sensor. It includes functionality
-    for anomaly detection based on specified minimum and maximum temperature values.
+    A sensor class that extends BaseSensor for reading temperatures from a DHT11 sensor. It includes functionality for anomaly detection based on specified minimum and maximum temperature values.
 
     Attributes:
         pin (int): GPIO pin number where the DHT11 sensor is connected.
@@ -43,8 +42,7 @@ class TemperatureSensor(BaseSensor):
 
     def read_sensor(self) -> float:
         """
-        Attempts to read the temperature from the DHT11 sensor up to three times. Validates the temperature reading
-        to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
+        Attempts to read the temperature from the DHT11 sensor up to three times. Validates the temperature reading to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
 
         Returns:
             float: The temperature reading or NaN if the reading fails validation checks or cannot be read.

@@ -5,9 +5,7 @@ from typing import Optional
 
 class LoggerManager:
     """
-    LoggerManager is responsible for setting up and configuring loggers
-    in the application. It uses the Python logging module to create loggers
-    that write to both the console and a rotating file.
+    LoggerManager is responsible for setting up and configuring loggers in the application. It uses the Python logging module to create loggers that write to both the console and a rotating file.
 
     Static Methods:
         setup_logger: Configures and returns a logger with the specified name and settings.
@@ -17,9 +15,7 @@ class LoggerManager:
     def setup_logger(log_name: str, log_file: str, level_console: Optional[int] = logging.INFO, level_file: Optional[int] = logging.DEBUG) -> logging.Logger:
         """
         Sets up a logger with given configurations.
-
-        This method configures a logger to write logs to a rotating file and the console.
-        It ensures that multiple handlers are not added to the same logger.
+        This method configures a logger to write logs to a rotating file and the console. It ensures that multiple handlers are not added to the same logger.
 
         Args:
             log_name (str): The name of the logger.

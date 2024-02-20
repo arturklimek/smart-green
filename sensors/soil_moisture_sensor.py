@@ -6,9 +6,7 @@ import logging
 
 class SoilMoistureSensor(BaseSensor):
     """
-    A sensor class that extends BaseSensor for reading soil moisture levels from an analog soil moisture sensor
-    connected through an ADS1115 ADC converter. It includes functionality for anomaly detection based on
-    specified minimum and maximum moisture values.
+    A sensor class that extends BaseSensor for reading soil moisture levels from an analog soil moisture sensor connected through an ADS1115 ADC converter. It includes functionality for anomaly detection based on specified minimum and maximum moisture values.
 
     Attributes:
         i2c_address (int): I2C address where the ADS1115 ADC converter is connected.
@@ -44,8 +42,7 @@ class SoilMoistureSensor(BaseSensor):
 
     def read_sensor(self) -> float:
         """
-        Attempts to read the soil moisture level from the ADS1115 ADC converter. Validates the moisture reading
-        to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
+        Attempts to read the soil moisture level from the ADS1115 ADC converter. Validates the moisture reading to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
 
         Returns:
             float: The soil moisture reading or NaN if the reading fails validation checks or cannot be read.
@@ -84,8 +81,7 @@ class SoilMoistureSensor(BaseSensor):
 
     def convert_to_percentage(self, value: float, min_value: float = 0.8, max_value: float = 3.3) -> float:
         """
-        Converts an analog value to a percentage based on the specified minimum and maximum values,
-        with an inverse relationship between the analog value and the percentage.
+        Converts an analog value to a percentage based on the specified minimum and maximum values, with an inverse relationship between the analog value and the percentage.
 
         Args:
             value (float): The raw analog value to convert.

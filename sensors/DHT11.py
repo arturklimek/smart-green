@@ -6,12 +6,9 @@ import logging
 
 class DHT11Sensor:
     """
-    A singleton class to manage access to a DHT sensor. This class ensures that only one instance
-    per GPIO pin is created, facilitating shared access to DHT sensors across different parts of an
-    application without initializing the sensor multiple times.
+    A singleton class to manage access to a DHT sensor. This class ensures that only one instance per GPIO pin is created, facilitating shared access to DHT sensors across different parts of an application without initializing the sensor multiple times.
 
-    This class uses Adafruit_DHT for sensor reading, and RPi.GPIO for GPIO management, providing
-    a thread-safe mechanism to read humidity and temperature data from a DHT sensor.
+    This class uses Adafruit_DHT for sensor reading, and RPi.GPIO for GPIO management, providing a thread-safe mechanism to read humidity and temperature data from a DHT sensor.
 
     Attributes:
         sensor_type (Adafruit_DHT.DHT11): The type of DHT sensor
@@ -37,8 +34,7 @@ class DHT11Sensor:
 
     def __new__(cls: Type['DHT11Sensor'], pin: int, sensor_type: Adafruit_DHT.DHT11 = Adafruit_DHT.DHT11) -> 'DHT11Sensor':
         """
-        Ensures that only one instance of DHTSensorSingleton per GPIO pin is created. If an instance for a given pin
-        already exists, it returns that instance; otherwise, it creates a new one.
+        Ensures that only one instance of DHTSensorSingleton per GPIO pin is created. If an instance for a given pin already exists, it returns that instance; otherwise, it creates a new one.
 
         Args:
             pin (int): The GPIO pin number where the sensor is connected.
@@ -60,8 +56,7 @@ class DHT11Sensor:
 
     def _initialize_gpio(self, pin: int) -> None:
         """
-        Initializes the GPIO settings for the specified pin. This method sets the GPIO mode
-        and prepares the pin for input.
+        Initializes the GPIO settings for the specified pin. This method sets the GPIO mode and prepares the pin for input.
 
         Args:
             pin (int): The GPIO pin number to initialize.

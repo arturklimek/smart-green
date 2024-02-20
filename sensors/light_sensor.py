@@ -6,8 +6,7 @@ import logging
 
 class LightSensor(BaseSensor):
     """
-    A sensor class that extends BaseSensor for reading light intensity from a BH1750 sensor. It includes functionality
-    for anomaly detection based on specified minimum and maximum light intensity values.
+    A sensor class that extends BaseSensor for reading light intensity from a BH1750 sensor. It includes functionality for anomaly detection based on specified minimum and maximum light intensity values.
 
     Attributes:
         i2c_address (int): I2C address where the BH1750 sensor is connected.
@@ -41,8 +40,7 @@ class LightSensor(BaseSensor):
 
     def read_sensor(self) -> float:
         """
-        Attempts to read the light intensity from the BH1750 sensor. Validates the light intensity reading
-        to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
+        Attempts to read the light intensity from the BH1750 sensor. Validates the light intensity reading to ensure it's within specified range and not an anomaly if anomaly detection is enabled.
 
         Returns:
             float: The light intensity reading in lux or NaN if the reading fails validation checks or cannot be read.
@@ -62,7 +60,7 @@ class LightSensor(BaseSensor):
                     return float('nan')
 
                 if self.anomaly_detection:
-                    if self.detect_anomaly(new_value=light_intensity, acceptable_deviation=15):
+                    if self.detect_anomaly(new_value=light_intensity, acceptable_deviation=10):
                         self.logger.warning(
                             f"Sensor name={self.name} - Anomaly detected for light intensity={light_intensity} lux, returning NaN.")
                         return float('nan')
