@@ -7,8 +7,128 @@ LOG_DIR_PATH = os.path.join(APP_PATH, 'logs')
 APP_CONFIG_PATH = os.path.join(APP_PATH, 'config.yaml')
 
 DEFAULT_CONFIG = {
-
+    "influxdb": {
+        "host": "localhost",
+        "port": 8086,
+        "username": "garden_core_user",
+        "password": "",
+        "database": "garden"
+    },
+    "sensors": [
+        {
+            "name": "soilMoistureSensor1",
+            "type": "SoilMoistureSensor",
+            "params": {
+                "read_frequency": 60,
+                "i2c_address": 0x48
+            }
+        },
+        {
+            "name": "temperatureSensor1",
+            "type": "TemperatureSensor",
+            "params": {
+                "read_frequency": 60,
+                "pin": 4
+            }
+        },
+        {
+            "name": "humiditySensor1",
+            "type": "HumiditySensor",
+            "params": {
+                "read_frequency": 60,
+                "pin": 4
+            }
+        },
+        {
+            "name": "lightSensor1",
+            "type": "LightSensor",
+            "params": {
+                "read_frequency": 60,
+                "i2c_address": 0x23
+            }
+        }
+    ],
+    "actuators": [
+        {
+            "name": "pumpActuator1",
+            "type": "BaseActuator",
+            "params": {
+                "gpio_pin": 26,
+                "initial_state": False
+            }
+        },
+        {
+            "name": "ventilationActuator1",
+            "type": "BaseActuator",
+            "params": {
+                "gpio_pin": 13,
+                "initial_state": False
+            }
+        },
+        {
+            "name": "lightingActuator1",
+            "type": "BaseActuator",
+            "params": {
+                "gpio_pin": 19,
+                "initial_state": False
+            }
+        }
+    ],
+    "controllers": [
+        {
+            "type": "IrrigationController",
+            "sensors": {
+                "soilMoistureSensor1": {
+                    "threshold": 0.75,
+                    "comparison": "LOWER"
+                }
+            },
+            "actuator": "pumpActuator1",
+            "params": {
+                "check_interval": 60,
+                "cooldown_period": 600,
+                "pump_flow_rate": 240,
+                "water_volume": 1,
+            }
+        },
+        {
+            "type": "VentilationController",
+            "sensors": {
+                "temperatureSensor1": {
+                    "threshold": 27,
+                    "comparison": "HIGHER"
+                },
+                "humiditySensor1": {
+                    "threshold": 75,
+                    "comparison": "HIGHER"
+                }
+            },
+            "actuator": "ventilationActuator1",
+            "params": {
+                "check_interval": 60,
+                "cooldown_period": 120
+            }
+        },
+        {
+            "type": "LightingController",
+            "sensors": {
+                "lightSensor1": {
+                    "threshold": 7000,
+                    "comparison": "LOWER"
+                }
+            },
+            "actuator": "lightingActuator1",
+            "params": {
+                "check_interval": 60,
+                "cooldown_period": 180,
+                "activation_time": 1800,
+                "start_hour": 9,
+                "end_hour": 21
+            }
+        }
+    ]
 }
+
 
 class AppConfig:
     """
