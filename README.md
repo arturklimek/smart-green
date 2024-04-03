@@ -53,13 +53,13 @@ _The hardware configuration should be adjusted according to individual needs_
 
 #### System Central Unit Diagram
 All components of the central unit, such as sensors, actuators, power, etc., should be connected according to the following diagram:
-<br> <img alt="SYSTEM_SCHEME" src="https://github.com/arturklimek/smart-green/assets/119898929/b480e462-07e0-4b50-9dbf-4da69cea2199" width="50%" height="50%"/>
+<br> <img alt="SYSTEM_SCHEME" src="https://github.com/arturklimek/smart-green/assets/119898929/b480e462-07e0-4b50-9dbf-4da69cea2199" width="65%" height="65%"/>
 
 #### Display Module Diagram
 The display module is an optional element connected to the central unit via a USB serial interface, which powers the module and facilitates communication with the central unit.
 
 The Arduino UNO should be connected to the display as per the following diagram:
-<br> <img alt="AruinoDisplayModule" src="https://docs.arduino.cc/static/87dafeba444f77d41fe0061e5a34bfde/4ff83/LCD_Base_bb_Schem.png" width="30%" height="30%"/>
+<br> <img alt="AruinoDisplayModule" src="https://docs.arduino.cc/static/87dafeba444f77d41fe0061e5a34bfde/4ff83/LCD_Base_bb_Schem.png" width="50%" height="50%"/>
 
 
 ## 💻 Software Setup
